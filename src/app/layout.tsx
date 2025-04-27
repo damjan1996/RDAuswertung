@@ -2,6 +2,8 @@ import '@/styles/globals.css';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
+import { AuthProvider } from '@/contexts/auth-context';
+
 import type { ReactNode } from 'react';
 
 // Load Inter font
@@ -31,7 +33,9 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="de" className={`${inter.variable}`}>
-      <body className="min-h-screen bg-gray-50 font-sans">{children}</body>
+      <body className="min-h-screen bg-gray-50 font-sans">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

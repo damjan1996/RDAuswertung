@@ -4,9 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { useState } from 'react';
 
+import { useAuth } from '@/contexts/auth-context';
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { isAuthenticated, user, logout } = useAuth();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -14,6 +17,10 @@ export default function Header() {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   // Navigation items
@@ -52,6 +59,18 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+
+            {isAuthenticated && (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-blue-200">Angemeldet als: {user || 'Benutzer'}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 bg-primary-700 hover:bg-primary-600 rounded-md text-sm transition-colors"
+                >
+                  Abmelden
+                </button>
+              </div>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -99,6 +118,20 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
+
+              {isAuthenticated && (
+                <>
+                  <div className="py-2 px-3 text-sm text-blue-200">
+                    Angemeldet als: {user || 'Benutzer'}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="py-2 px-3 bg-primary-600 hover:bg-primary-500 rounded-md text-left"
+                  >
+                    Abmelden
+                  </button>
+                </>
+              )}
             </nav>
           </div>
         </div>
