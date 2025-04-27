@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Check for staged TS/TSX files to optimize validation time
+STAGED_TS_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep "\.tsx\?$" || true)
+
+# Skip if no TypeScript files are staged
+if [ -z "$STAGED_TS_FILES" ]; then
+  echo "✅ No TypeScript files to validate"
+  exit 0
+fi
+
+# Format files
+echo "🎨 Formatting code..."
+npx prettier --write $STAGED_TS_FILES
+git add $STAGED_TS_FILES
+
+# Run TypeScript checks
+echo "📝 Running TypeScript checks..."
+npx tsc --noEmit
+
+# Run ESLint
+echo "🧹 Running ESLint..."
+npx eslint $STAGED_TS_FILES --fix
+git add $STAGED_TS_FILES
+
+# Run tests related to staged files
+echo "🧪 Running tests..."
+npx jest --bail --findRelatedTests $STAGED_TS_FILES
+
+echo "✅ Pre-commit checks passed! Committing now..."

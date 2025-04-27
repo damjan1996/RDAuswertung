@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --primary-color: #003366;
+    --secondary-color: #f08c00;
+    --background-color: #f5f5f5;
+    --text-color: #333333;
+    --border-color: #dddddd;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+}
+
+@layer base {
+    body {
+        @apply font-sans text-gray-800 bg-gray-50;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply text-primary font-semibold;
+    }
+}
+
+@layer components {
+    .card {
+        @apply bg-white rounded-md shadow-sm overflow-hidden;
+    }
+
+    .card-header {
+        @apply bg-primary text-white p-4 font-semibold;
+    }
+
+    .card-body {
+        @apply p-6;
+    }
+
+    .btn {
+        @apply px-4 py-2 rounded-md text-white font-medium transition-colors cursor-pointer;
+    }
+
+    .btn-primary {
+        @apply bg-primary hover:bg-primary/80;
+    }
+
+    .btn-secondary {
+        @apply bg-secondary hover:bg-secondary/80;
+    }
+
+    .btn-success {
+        @apply bg-success hover:bg-success/80;
+    }
+
+    .btn-danger {
+        @apply bg-danger hover:bg-danger/80;
+    }
+
+    .form-group {
+        @apply mb-4;
+    }
+
+    .form-label {
+        @apply block mb-2 font-medium;
+    }
+
+    .form-input {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50;
+    }
+
+    .form-select {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50;
+    }
+
+    .alert {
+        @apply p-4 mb-4 rounded-md;
+    }
+
+    .alert-success {
+        @apply bg-success/20 text-success;
+    }
+
+    .alert-danger {
+        @apply bg-danger/20 text-danger;
+    }
+
+    .alert-info {
+        @apply bg-info/20 text-info;
+    }
+
+    .alert-warning {
+        @apply bg-warning/20 text-warning;
+    }
+
+    .table-container {
+        @apply overflow-x-auto;
+    }
+
+    .table {
+        @apply w-full border-collapse mb-8;
+    }
+
+    .table th {
+        @apply bg-primary text-white p-3 text-left font-semibold;
+    }
+
+    .table td {
+        @apply p-3 border-b border-gray-200;
+    }
+
+    .table tr:nth-child(even) {
+        @apply bg-gray-50;
+    }
+
+    .table tr:hover {
+        @apply bg-gray-100;
+    }
+
+    .summary-box {
+        @apply bg-white rounded-md shadow-sm p-6 flex flex-col items-center justify-center min-h-36 text-center;
+    }
+
+    .summary-box h3 {
+        @apply mb-1 text-primary;
+    }
+
+    .summary-box .value {
+        @apply text-4xl font-bold text-secondary;
+    }
+
+    .summary-box .label {
+        @apply text-gray-600;
+    }
+
+    .summary-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8;
+    }
+
+    .filter-bar {
+        @apply bg-white p-4 rounded-md shadow-sm mb-6 flex flex-wrap gap-4 items-center;
+    }
+
+    .chart-container {
+        @apply bg-white rounded-md shadow-sm p-6 mb-6 min-h-72;
+    }
+
+    .loader {
+        @apply inline-block w-20 h-20 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    }
+
+    .loader:after {
+        content: " ";
+        @apply block w-16 h-16 m-2 rounded-full border-6 border-primary border-t-transparent animate-spin;
+    }
+}
+
+@media print {
+    header, footer, .filter-bar, .btn, button {
+        @apply hidden;
+    }
+
+    body {
+        @apply bg-white;
+    }
+
+    .container {
+        @apply w-full max-w-none p-0;
+    }
+
+    .card, .summary-box, .chart-container {
+        @apply shadow-none border border-gray-300;
+    }
+
+    .card-header {
+        @apply bg-gray-100 text-primary;
+    }
+
+    .table {
+        @apply text-xs;
+    }
+
+    .table th {
+        @apply bg-gray-100 text-primary;
+    }
+}

@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// Standort model - represents a location
+model Standort {
+  id             Int       @id @map("ID")
+  bezeichnung    String    @map("Bezeichnung")
+  preis          Decimal   @map("Preis") @db.Decimal(10, 2)
+  preis7Tage     Decimal   @map("Preis7Tage") @db.Decimal(10, 2)
+
+  // Relationships
+  raumbuch       Raumbuch[]
+  bereich        Bereich[]
+  gebaeudeteil   Gebaeudeteil[]
+  etage          Etage[]
+
+  @@map("BIRD.Standort")
+}
+
+// Bereich model - represents an area in a building
+model Bereich {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+  standortId  Int       @map("Standort_ID")
+
+  // Relationships
+  standort    Standort  @relation(fields: [standortId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  raumbuch    Raumbuch[]
+
+  @@map("BIRD.Bereich")
+}
+
+// Gebaeudeteil model - represents a part of a building
+model Gebaeudeteil {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+  standortId  Int       @map("Standort_ID")
+
+  // Relationships
+  standort    Standort  @relation(fields: [standortId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  raumbuch    Raumbuch[]
+
+  @@map("BIRD.Gebaeudeteil")
+}
+
+// Etage model - represents a floor in a building
+model Etage {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+  standortId  Int       @map("Standort_ID")
+
+  // Relationships
+  standort    Standort  @relation(fields: [standortId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  raumbuch    Raumbuch[]
+
+  @@map("BIRD.Etage")
+}
+
+// Reinigungsgruppe model - represents a cleaning group
+model Reinigungsgruppe {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+
+  // Relationships
+  raumbuch    Raumbuch[]
+
+  @@map("BIRD.Reinigungsgruppe")
+}
+
+// Reinigungsintervall model - represents cleaning interval
+model Reinigungsintervall {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+
+  // Relationships
+  raumbuch    Raumbuch[]
+  reinigungsintervallTage ReinigungsintervallTage[]
+
+  @@map("BIRD.Reinigungsintervall")
+}
+
+// ReinigungsTage model - represents cleaning days
+model ReinigungsTage {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+
+  // Relationships
+  raumbuch    Raumbuch[]
+
+  @@map("BIRD.ReinigungsTage")
+}
+
+// ReinigungsintervallTage model - represents days per cleaning interval
+model ReinigungsintervallTage {
+  id                  Int       @id @default(autoincrement())
+  reinigungsintervallId Int       @map("Reinigungsintervall_ID")
+  anzahl              Int       @map("Anzahl")
+  reinigungstage      Float     @map("Reinigungstage")
+
+  // Relationships
+  reinigungsintervall Reinigungsintervall @relation(fields: [reinigungsintervallId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  raumbuch    Raumbuch[]
+
+  @@unique([reinigungsintervallId, anzahl])
+  @@map("BIRD.ReinigungsintervallTage")
+}
+
+// Raumbuch model - main model for room data
+model Raumbuch {
+  id                  Int       @id @map("ID")
+  raumnummer          String?   @map("Raumnummer")
+  standortId          Int       @map("Standort_ID")
+  bereichId           Int       @map("Bereich_ID")
+  gebaeudeteilId      Int       @map("Gebaeudeteil_ID")
+  etageId             Int       @map("Etage_ID")
+  bezeichnung         String?   @map("Bezeichnung")
+  reinigungsgruppeId  Int       @map("Reinigungsgruppe_ID")
+  qm                  Float     @map("qm")
+  anzahl              Int       @map("Anzahl")
+  reinigungsintervallId Int     @map("Reinigungsintervall_ID")
+  qmStunde            Float     @map("qmStunde")
+  reinigungsTageId    Int?      @map("ReinigungsTage_ID")
+  bemerkung           String?   @map("Bemerkung")
+  reduzierung         String?   @map("Reduzierung")
+
+  // Computed fields - will be calculated in application
+  // rgJahr, rgMonat, qmMonat, wertMonat, stundenTag, stundenMonat, wertJahr
+
+  // Relationships
+  standort            Standort  @relation(fields: [standortId], references: [id])
+  bereich             Bereich   @relation(fields: [bereichId], references: [id])
+  gebaeudeteil        Gebaeudeteil @relation(fields: [gebaeudeteilId], references: [id])
+  etage               Etage     @relation(fields: [etageId], references: [id])
+  reinigungsgruppe    Reinigungsgruppe @relation(fields: [reinigungsgruppeId], references: [id])
+  reinigungsintervall Reinigungsintervall @relation(fields: [reinigungsintervallId], references: [id])
+  reinigungsTage      ReinigungsTage? @relation(fields: [reinigungsTageId], references: [id])
+  reinigungsintervallTage ReinigungsintervallTage? @relation(fields: [reinigungsintervallId, anzahl], references: [reinigungsintervallId, anzahl], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("BIRD.Raumbuch")
+}

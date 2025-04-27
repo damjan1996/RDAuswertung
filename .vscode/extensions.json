@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "prisma.prisma",
+    "ms-playwright.playwright",
+    "orta.vscode-jest",
+    "dsznajder.es7-react-js-snippets",
+    "christian-kohler.path-intellisense",
+    "streetsidesoftware.code-spell-checker",
+    "mikestead.dotenv",
+    "ms-azuretools.vscode-docker",
+    "firsttris.vscode-jest-runner",
+    "ms-vscode.vscode-typescript-next",
+    "csstools.postcss",
+    "editorconfig.editorconfig",
+    "ms-mssql.mssql"
+  ]
+}
