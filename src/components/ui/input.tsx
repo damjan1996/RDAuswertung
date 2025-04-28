@@ -1,8 +1,13 @@
 'use client';
 
-import React, { forwardRef, InputHTMLAttributes } from 'react';
+import { motion } from 'framer-motion';
+import { AlertCircle } from 'lucide-react';
+import { forwardRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
+
+import type { InputHTMLAttributes } from 'react';
+import type React from 'react';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -44,30 +49,47 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+    const [isFocused, setIsFocused] = useState(false);
 
     const hasIconOrText = icon || prefixText || suffixText;
 
     return (
-      <div className={cn('flex flex-col space-y-1', fullWidth && 'w-full', containerClassName)}>
+      <div className={cn('flex flex-col space-y-2', fullWidth && 'w-full', containerClassName)}>
         {label && (
-          <label
+          <motion.label
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
             htmlFor={inputId}
             className={cn(
-              'block text-sm font-medium text-gray-700',
-              required && 'after:content-["*"] after:ml-0.5 after:text-red-500',
+              'block text-sm font-medium text-primary-700',
+              required && "after:content-['*'] after:ml-0.5 after:text-accent",
               labelClassName
             )}
           >
             {label}
-          </label>
+          </motion.label>
         )}
 
-        <div className={cn('relative rounded-md', fullWidth && 'w-full')}>
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className={cn('relative rounded-lg', fullWidth && 'w-full')}
+        >
           {/* Prefix text or left icon */}
           {(prefixText || (icon && iconPosition === 'left')) && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              {prefixText && <span className="text-gray-500 sm:text-sm">{prefixText}</span>}
-              {icon && iconPosition === 'left' && <span className="text-gray-400">{icon}</span>}
+              {prefixText && <span className="text-primary-500 sm:text-sm">{prefixText}</span>}
+              {icon && iconPosition === 'left' && (
+                <motion.span
+                  initial={{ opacity: 0.7 }}
+                  animate={{ opacity: isFocused ? 1 : 0.7 }}
+                  className={cn('text-primary-400', isFocused && 'text-accent')}
+                >
+                  {icon}
+                </motion.span>
+              )}
             </div>
           )}
 
@@ -77,10 +99,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             disabled={disabled}
             required={required}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             className={cn(
-              'block border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
-              'disabled:opacity-60 disabled:bg-gray-100 disabled:cursor-not-allowed',
-              error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
+              'block w-full border border-gray-200 rounded-lg shadow-sm',
+              'focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all duration-200',
+              'disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-not-allowed',
+              error && 'border-red-300 focus:ring-red-500/20 focus:border-red-500',
               prefixText || (icon && iconPosition === 'left') ? 'pl-10' : '',
               suffixText || (icon && iconPosition === 'right') ? 'pr-10' : '',
               hasIconOrText ? '' : 'py-2 px-3',
@@ -97,24 +122,46 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {/* Suffix text or right icon */}
           {(suffixText || (icon && iconPosition === 'right')) && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              {suffixText && <span className="text-gray-500 sm:text-sm">{suffixText}</span>}
-              {icon && iconPosition === 'right' && <span className="text-gray-400">{icon}</span>}
+              {suffixText && <span className="text-primary-500 sm:text-sm">{suffixText}</span>}
+              {icon && iconPosition === 'right' && (
+                <motion.span
+                  initial={{ opacity: 0.7 }}
+                  animate={{ opacity: isFocused ? 1 : 0.7 }}
+                  className={cn('text-primary-400', isFocused && 'text-accent')}
+                >
+                  {icon}
+                </motion.span>
+              )}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Error message */}
         {error && (
-          <p id={`${inputId}-error`} className={cn('text-sm text-red-600', errorClassName)}>
-            {error}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            transition={{ duration: 0.2 }}
+            className="flex items-start"
+          >
+            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 mr-1.5 flex-shrink-0" />
+            <p id={`${inputId}-error`} className={cn('text-sm text-red-500', errorClassName)}>
+              {error}
+            </p>
+          </motion.div>
         )}
 
         {/* Helper text - only show when there's no error */}
         {!error && helperText && (
-          <p id={`${inputId}-description`} className={cn('text-sm text-gray-500', helperClassName)}>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            id={`${inputId}-description`}
+            className={cn('text-sm text-primary-500/70', helperClassName)}
+          >
             {helperText}
-          </p>
+          </motion.p>
         )}
       </div>
     );

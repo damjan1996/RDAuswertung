@@ -1,29 +1,57 @@
+// src/config/database.ts
 /**
- * Datenbankeinstellungen für die RitterDigitalAuswertung-Anwendung.
- * Enthält Verbindungsparameter für die SQL Server Datenbank.
+ * Database configuration
  */
 
-// SQL Server Verbindungsparameter
+// Parse database URL from environment
+function parseDatabaseUrl(url: string) {
+  try {
+    // Example URL: sqlserver://username:password@server:port/database
+    const regex = /sqlserver:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)/;
+    const matches = url.match(regex);
+
+    if (!matches || matches.length < 6) {
+      throw new Error('Invalid database URL format');
+    }
+
+    return {
+      username: matches[1],
+      password: matches[2],
+      server: matches[3],
+      port: parseInt(matches[4], 10),
+      database: matches[5],
+    };
+  } catch (error) {
+    console.error('Failed to parse database URL:', error);
+    // Return default values if parsing fails
+    return {
+      username: 'sa',
+      password: process.env.DB_PASSWORD || '',
+      server: process.env.DB_SERVER || 'localhost',
+      port: parseInt(process.env.DB_PORT || '1433', 10),
+      database: process.env.DB_NAME || 'RdRaumbuchHerne',
+    };
+  }
+}
+
+// Read from environment variables
+const dbUrl = process.env.DATABASE_URL || '';
+const parsedUrl = parseDatabaseUrl(dbUrl);
+
 export const DATABASE_CONFIG = {
-  server: process.env.DB_SERVER || '116.202.224.248',
-  database: process.env.DB_NAME || 'RdRaumbuch',
-  username: process.env.DB_USER || 'sa',
-  password: process.env.DB_PASSWORD || 'YJ5C19QZ7ZUW!',
-  driver: process.env.DB_DRIVER || '{ODBC Driver 17 for SQL Server}',
-  trusted_connection: process.env.DB_TRUSTED_CONNECTION || 'no',
-  timeout: parseInt(process.env.DB_TIMEOUT || '30', 10),
+  username: parsedUrl.username,
+  password: parsedUrl.password,
+  server: parsedUrl.server,
+  port: parsedUrl.port,
+  database: parsedUrl.database,
+  schema: process.env.DATABASE_SCHEMA || 'BIRD',
+  timeout: parseInt(process.env.DATABASE_TIMEOUT || '30', 10),
 };
 
-// Default ID für den Standort, falls nicht explizit angegeben
-export const DEFAULT_STANDORT_ID = 1;
+// Default standort ID if none is specified
+export const DEFAULT_STANDORT_ID = parseInt(process.env.DEFAULT_STANDORT_ID || '-1', 10);
 
-// Prisma Database URL basierend auf den Config-Werten generieren
-export const generatePrismaUrl = () => {
-  const { server, database, username, password, trusted_connection } = DATABASE_CONFIG;
-
-  // MSSQL-Verbindungsstring für Prisma erstellen
-  return `sqlserver://${server}:1433;database=${database};user=${username};password=${password};trustServerCertificate=true;${trusted_connection === 'yes' ? 'Trusted_Connection=yes;' : ''}encrypt=true`;
-};
-
-// Für direkte Verwendung in der .env-Datei
-export const PRISMA_DATABASE_URL = generatePrismaUrl();
+// Logging
+console.log(
+  `Database configuration loaded for: ${DATABASE_CONFIG.database} on ${DATABASE_CONFIG.server}`
+);

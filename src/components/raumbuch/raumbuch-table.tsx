@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import Input from '@/components/ui/input';
 import Table from '@/components/ui/table';
 
 import type { RaumbuchRow, RaumbuchSummary } from '@/types/raumbuch.types';
 
-// Verwenden Sie RaumbuchRow als RaumbuchEntry
+// Use RaumbuchRow as RaumbuchEntry
 type RaumbuchEntry = RaumbuchRow;
 
 interface RaumbuchTableProps {
@@ -16,38 +16,48 @@ interface RaumbuchTableProps {
   className?: string;
 }
 
+// Define a stricter type for sort configuration
+interface SortConfig {
+  key: keyof RaumbuchEntry;
+  direction: 'asc' | 'desc';
+}
+
 export default function RaumbuchTable({ data, summary, className = '' }: RaumbuchTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof RaumbuchEntry;
-    direction: 'asc' | 'desc';
-  } | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   // Format a number to fixed decimal places
   const formatNumber = (value: number | null | undefined, decimals = 2) => {
     if (value === null || value === undefined) return '';
-    // Sicherstellen, dass value eine Nummer ist
+    // Make sure value is a number
     const numValue = typeof value === 'number' ? value : parseFloat(String(value));
-    // Prüfen, ob die Konvertierung erfolgreich war
+    // Check if conversion was successful
     if (isNaN(numValue)) return '';
     return numValue.toFixed(decimals);
   };
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle search input change - make serializable with useCallback
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
-  // Handle column sort
-  const handleSort = (key: keyof RaumbuchEntry) => {
-    let direction: 'asc' | 'desc' = 'asc';
+  // Handle column sort - make serializable with useCallback
+  // Modified to accept string | number | symbol to match Table component's expectations
+  const handleSort = useCallback(
+    (key: string | number | symbol) => {
+      // Only proceed if the key is a valid key of RaumbuchEntry
+      if (typeof key === 'string' && key in data[0]) {
+        let direction: 'asc' | 'desc' = 'asc';
 
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+          direction = 'desc';
+        }
 
-    setSortConfig({ key, direction });
-  };
+        setSortConfig({ key: key as keyof RaumbuchEntry, direction });
+      }
+    },
+    [sortConfig, data]
+  );
 
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
@@ -69,7 +79,7 @@ export default function RaumbuchTable({ data, summary, className = '' }: Raumbuc
           false ||
           item.Bezeichnung?.toLowerCase().includes(lowercasedFilter) ||
           false ||
-          item.RG?.toLowerCase().includes(lowercasedFilter) ||
+          item.Reinigungsgruppe?.toLowerCase().includes(lowercasedFilter) ||
           false
         );
       });
@@ -132,14 +142,19 @@ export default function RaumbuchTable({ data, summary, className = '' }: Raumbuc
     },
     {
       header: 'RG',
-      accessor: 'RG' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => row.RG || '',
+      accessor: 'Reinigungsgruppe' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => row.Reinigungsgruppe || '',
     },
     {
-      header: 'qm',
-      accessor: 'qm' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.qm),
+      header: 'Menge',
+      accessor: 'Menge' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.Menge),
       className: 'text-right',
+    },
+    {
+      header: 'Einheit',
+      accessor: 'Einheit' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => row.Einheit || '',
     },
     {
       header: 'Anz.',
@@ -149,83 +164,97 @@ export default function RaumbuchTable({ data, summary, className = '' }: Raumbuc
     },
     {
       header: 'Intervall',
-      accessor: 'Intervall' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => row.Intervall || '',
+      accessor: 'Reinigungsintervall' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => row.Reinigungsintervall || '',
     },
     {
       header: 'Rg/Jahr',
-      accessor: 'RgJahr' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.RgJahr),
+      accessor: 'ReinigungstageJahr' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.ReinigungstageJahr),
       className: 'text-right',
     },
     {
       header: 'Rg/Monat',
-      accessor: 'RgMonat' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.RgMonat),
+      accessor: 'ReinigungstageMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.ReinigungstageMonat),
       className: 'text-right',
     },
     {
-      header: 'qm/Monat',
-      accessor: 'qmMonat' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.qmMonat),
+      header: 'Menge/Monat',
+      accessor: 'MengeAktivMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.MengeAktivMonat),
       className: 'text-right',
     },
     {
-      header: '€/Monat',
-      accessor: 'WertMonat' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.WertMonat),
+      header: 'VK Netto',
+      accessor: 'VkWertNettoMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.VkWertNettoMonat),
+      className: 'text-right',
+    },
+    {
+      header: 'VK Brutto',
+      accessor: 'VkWertBruttoMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.VkWertBruttoMonat),
+      className: 'text-right',
+    },
+    {
+      header: 'RG Netto',
+      accessor: 'RgWertNettoMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.RgWertNettoMonat),
+      className: 'text-right',
+    },
+    {
+      header: 'RG Brutto',
+      accessor: 'RgWertBruttoMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.RgWertBruttoMonat),
       className: 'text-right',
     },
     {
       header: 'h/Tag',
-      accessor: 'StundenTag' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.StundenTag, 3),
+      accessor: 'StundeTag' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.StundeTag, 3),
       className: 'text-right',
     },
     {
       header: 'h/Monat',
-      accessor: 'StundenMonat' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.StundenMonat),
+      accessor: 'StundeMonat' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.StundeMonat),
       className: 'text-right',
     },
     {
-      header: '€/Jahr',
-      accessor: 'WertJahr' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.WertJahr),
-      className: 'text-right',
-    },
-    {
-      header: 'qm/h',
-      accessor: 'qmStunde' as keyof RaumbuchEntry,
-      cell: (row: RaumbuchEntry) => formatNumber(row.qmStunde),
+      header: 'Leistung/h',
+      accessor: 'LeistungStunde' as keyof RaumbuchEntry,
+      cell: (row: RaumbuchEntry) => formatNumber(row.LeistungStunde),
       className: 'text-right',
     },
   ];
 
   // Summary row calculations
-  const summaryRow: RaumbuchEntry = {
-    ID: 0, // Hinzugefügt
+  const summaryRow: Partial<RaumbuchEntry> = {
+    ID: 0,
     Raumnummer: '',
     Bereich: '',
     Gebaeudeteil: '',
     Etage: '',
     Bezeichnung: 'Summe:',
-    RG: '',
-    qm: summary.totalQm,
-    Anzahl: 0, // Geändert zu 0 statt leerer String
-    Intervall: '',
-    RgJahr: 0, // Geändert zu 0
-    RgMonat: 0, // Geändert zu 0
-    qmMonat: summary.totalQmMonat,
-    WertMonat: summary.totalWertMonat,
-    StundenTag: 0, // Geändert zu 0
-    StundenMonat: summary.totalStundenMonat,
-    WertJahr: summary.totalWertJahr,
-    qmStunde: 0, // Geändert zu 0
-    Reinigungstage: '', // Hinzugefügt
-    Bemerkung: '', // Hinzugefügt
-    Reduzierung: '', // Hinzugefügt
-    Standort_ID: 0, // Hinzugefügt
+    Reinigungsgruppe: '',
+    Menge: summary.totalMenge,
+    Einheit: '',
+    Anzahl: 0,
+    Reinigungsintervall: '',
+    ReinigungstageJahr: 0,
+    ReinigungstageMonat: 0,
+    MengeAktivMonat: summary.totalMengeAktivMonat,
+    VkWertNettoMonat: summary.totalVkWertNettoMonat,
+    VkWertBruttoMonat: summary.totalVkWertBruttoMonat,
+    RgWertNettoMonat: summary.totalRgWertNettoMonat,
+    RgWertBruttoMonat: summary.totalRgWertBruttoMonat,
+    StundeTag: 0,
+    StundeMonat: summary.totalStundenMonat,
+    LeistungStunde: 0,
+    ReinigungsTage: '',
+    Bemerkung: '',
+    Reduzierung: '',
   };
 
   return (
@@ -261,7 +290,7 @@ export default function RaumbuchTable({ data, summary, className = '' }: Raumbuc
         <Table
           columns={columns}
           data={filteredAndSortedData}
-          summaryRow={summaryRow}
+          summaryRow={summaryRow as RaumbuchEntry}
           currentSort={sortConfig}
           onSort={handleSort}
         />

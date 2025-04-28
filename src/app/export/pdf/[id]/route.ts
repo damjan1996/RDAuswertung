@@ -1,13 +1,13 @@
 // C:\Development\RDAuswertung\src\app\export\pdf\[id]\route.ts
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import {
   calculateSummary,
   prepareDataForVisualization,
 } from '@/services/analysis/raumbuch-analysis';
-import { getRaumbuchData, getStandortById } from '@/services/database/queries';
+import { getGebaeudeById, getRaumbuchData } from '@/services/database/queries';
 import { generatePdf } from '@/services/export/pdf-export';
 
 // Validate ID parameter
@@ -20,106 +20,98 @@ const paramsSchema = z.object({
     }),
 });
 
-// Apply query parameters schema for filtering
-const querySchema = z.object({
+// Filter query parameters schema
+const filterSchema = z.object({
   bereich: z.string().optional(),
   gebaeudeteil: z.string().optional(),
   etage: z.string().optional(),
-  rg: z.string().optional(),
+  reinigungsgruppe: z.string().optional(),
 });
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Validate standort ID
+    // Validate gebaeude ID
     const validatedParams = paramsSchema.safeParse({ id: params.id });
     if (!validatedParams.success) {
-      return new Response(JSON.stringify({ error: 'Invalid standort ID' }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      return NextResponse.json({ error: 'Invalid gebaeude ID' }, { status: 400 });
     }
 
-    const standortId = Number(params.id);
+    const gebaeude_ID = Number(params.id); // Changed from objekt_ID
 
-    // Validate query parameters for filtering
+    // Get gebaeude details to include the name in the PDF
+    const gebaeude = await getGebaeudeById(gebaeude_ID); // Changed from getObjektById
+    if (!gebaeude) {
+      return NextResponse.json({ error: 'Gebäude not found' }, { status: 404 });
+    }
+
+    // Parse query parameters for filtering
     const searchParams = request.nextUrl.searchParams;
-    const queryParams = {
+    const filterParams = {
       bereich: searchParams.get('bereich') || undefined,
       gebaeudeteil: searchParams.get('gebaeudeteil') || undefined,
       etage: searchParams.get('etage') || undefined,
-      rg: searchParams.get('rg') || undefined,
+      reinigungsgruppe: searchParams.get('reinigungsgruppe') || undefined,
     };
 
-    const validatedQuery = querySchema.safeParse(queryParams);
-    if (!validatedQuery.success) {
-      return new Response(JSON.stringify({ error: 'Invalid query parameters' }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    // Validate filter parameters
+    const validatedFilters = filterSchema.safeParse(filterParams);
+    if (!validatedFilters.success) {
+      return NextResponse.json({ error: 'Invalid filter parameters' }, { status: 400 });
     }
 
-    // Get standort information
-    const standort = await getStandortById(standortId);
-    if (!standort) {
-      return new Response(JSON.stringify({ error: 'Standort not found' }), {
-        status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    }
+    // Get raumbuch data
+    let raumbuchData = await getRaumbuchData(gebaeude_ID);
 
-    // Get raumbuch data with filters
-    let raumbuchData = await getRaumbuchData(standortId);
+    // Apply filters if provided
+    const filters = validatedFilters.data;
 
-    // Apply filters if any are provided
-    const filters = validatedQuery.success ? validatedQuery.data : {};
     if (filters.bereich) {
       raumbuchData = raumbuchData.filter(item => item.Bereich === filters.bereich);
     }
+
     if (filters.gebaeudeteil) {
       raumbuchData = raumbuchData.filter(item => item.Gebaeudeteil === filters.gebaeudeteil);
     }
+
     if (filters.etage) {
       raumbuchData = raumbuchData.filter(item => item.Etage === filters.etage);
     }
-    if (filters.rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === filters.rg);
+
+    if (filters.reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(
+        item => item.Reinigungsgruppe === filters.reinigungsgruppe
+      );
     }
 
-    // Calculate summary and prepare visualization data
+    // Calculate summary data
     const summary = calculateSummary(raumbuchData);
+
+    // Prepare visualization data
     const visualizationData = prepareDataForVisualization(raumbuchData);
 
-    // Generate PDF file
-    const pdfBuffer = await generatePdf(raumbuchData, standort.bezeichnung, {
+    // Generate PDF
+    const pdfBuffer = await generatePdf(raumbuchData, gebaeude.bezeichnung, {
       summary,
       visualizationData,
     });
 
-    // Set filename
-    const filename = `Raumbuch_Auswertung_${standort.bezeichnung}_${new Date().toISOString().split('T')[0]}.pdf`;
+    // Set filename based on gebaeude name
+    const filename = `Raumbuch_${gebaeude.bezeichnung.replace(/[^a-z0-9]/gi, '_')}_${new Date()
+      .toISOString()
+      .slice(0, 10)}.pdf`;
 
-    // Return the PDF file as a downloadable file
-    return new Response(pdfBuffer, {
-      status: 200,
+    // Return the PDF file
+    return new NextResponse(pdfBuffer, {
       headers: {
-        'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': pdfBuffer.byteLength.toString(),
+        'Content-Type': 'application/pdf',
       },
     });
   } catch (error) {
-    console.error('PDF export error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to generate PDF file' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    console.error('Error generating PDF:', error);
+    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
   }
 }
+
+// Mark this route as dynamic to prevent static generation errors
+export const dynamic = 'force-dynamic';

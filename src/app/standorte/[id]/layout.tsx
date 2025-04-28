@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import React, { ReactNode } from 'react';
 
+import MainLayout from '@/components/layout/main-layout';
+
 // Define props for the layout component
 interface StandortLayoutProps {
   children: ReactNode;
@@ -19,11 +21,6 @@ export async function generateMetadata({ params }: StandortLayoutProps): Promise
   };
 }
 
-export default function StandortLayout({ children }: StandortLayoutProps) {
-  return (
-    <div className="relative">
-      {/* Standort-specific layout elements could go here */}
-      <div className="space-y-6">{children}</div>
-    </div>
-  );
+export default function StandortLayout({ children, params }: StandortLayoutProps) {
+  return <MainLayout>{children}</MainLayout>;
 }

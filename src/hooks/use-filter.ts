@@ -33,8 +33,10 @@ export function useFilter() {
       filters.etage = searchParams.get('etage') || '';
     }
 
-    if (searchParams.has('rg')) {
-      filters.rg = searchParams.get('rg') || '';
+    // Unterstütze sowohl 'reinigungsgruppe' als auch den alten Parameter 'rg'
+    if (searchParams.has('reinigungsgruppe') || searchParams.has('rg')) {
+      filters.reinigungsgruppe =
+        searchParams.get('reinigungsgruppe') || searchParams.get('rg') || '';
     }
 
     return filters;

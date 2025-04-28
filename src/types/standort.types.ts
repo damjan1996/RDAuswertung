@@ -8,13 +8,25 @@ import { BaseEntity } from './database.types';
  */
 export interface Standort extends BaseEntity {
   bezeichnung: string;
+  adresse: string | null;
+  strasse: string | null;
+  plz: string | null;
+  ort: string | null;
+  isActive: boolean;
+}
+
+/**
+ * Interface representing a Gebaeude (building)
+ * Renamed from Objekt to match database structure
+ */
+export interface Gebaeude extends BaseEntity {
+  firma_ID: number;
+  standort_ID: number;
+  bezeichnung: string;
   preis: number;
   preis7Tage: number;
-  strasse?: string | null;
-  hausnummer?: string | null;
-  plz?: string | null;
-  ort?: string | null;
-  isActive: boolean;
+  preisSonntag: number;
+  standort?: Standort;
 }
 
 /**
@@ -36,11 +48,21 @@ export interface StandortOption {
 }
 
 /**
+ * Type for Gebaeude selection options in dropdown menus
+ * Renamed from ObjektOption to match database structure
+ */
+export interface GebaeudeOption {
+  id: number;
+  bezeichnung: string;
+  standort_ID: number;
+  standort: string;
+}
+
+/**
  * Filter options specific to Standort
  */
 export interface StandortFilter {
   bezeichnung?: string;
-  isActive?: boolean;
 }
 
 /**
@@ -49,91 +71,27 @@ export interface StandortFilter {
 export interface StandortRow {
   ID: number;
   Bezeichnung: string;
-  Preis: number;
-  Preis7Tage: number;
-  Strasse?: string | null;
-  Hausnummer?: string | null;
-  PLZ?: string | null;
-  Ort?: string | null;
-  IsActive: boolean | number;
+  Adresse: string | null;
+  Strasse: string | null;
+  PLZ: string | null;
+  Ort: string | null;
 }
 
 /**
- * Summary statistics for a Standort
+ * Raw database row for Gebaeude data (before conversion to Gebaeude interface)
+ * Renamed from ObjektRow to match database structure
  */
-export interface StandortSummary {
-  totalBereich: number;
-  totalGebaeudeteil: number;
-  totalEtage: number;
-  totalReinigungsgruppen: number;
-  totalRaumbuchEntries: number;
-}
-
-/**
- * Bereich (area) related to a Standort
- */
-export interface Bereich extends BaseEntity {
-  bezeichnung: string;
-  standortId: number;
-}
-
-/**
- * Gebaeudeteil (building part) related to a Standort
- */
-export interface Gebaeudeteil extends BaseEntity {
-  bezeichnung: string;
-  standortId: number;
-}
-
-/**
- * Etage (floor) related to a Standort
- */
-export interface Etage extends BaseEntity {
-  bezeichnung: string;
-  standortId: number;
-}
-
-/**
- * Reinigungsgruppe (cleaning group) settings
- */
-export interface Reinigungsgruppe extends BaseEntity {
-  bezeichnung: string;
-}
-
-/**
- * Reinigungsintervall (cleaning interval) settings
- */
-export interface Reinigungsintervall extends BaseEntity {
-  bezeichnung: string;
-}
-
-/**
- * Raw database rows for related entities
- */
-export interface BereichRow {
-  ID: number;
-  Bezeichnung: string;
+export interface GebaeudeRow {
+  Gebaeude_ID: number; // Changed from Objekt_ID
+  Firma_ID: number;
   Standort_ID: number;
-}
-
-export interface GebaeudeTeilRow {
-  ID: number;
-  Bezeichnung: string;
-  Standort_ID: number;
-}
-
-export interface EtageRow {
-  ID: number;
-  Bezeichnung: string;
-  Standort_ID: number;
-}
-
-export interface ReinigungsgruppeRow {
-  ID: number;
-  Bezeichnung: string;
-}
-
-export interface ReinigungsintervallRow {
-  ID: number;
-  Bezeichnung: string;
+  Standort: string;
+  Adresse: string | null;
+  Strasse: string | null;
+  PLZ: string | null;
+  Ort: string | null;
+  Gebaeude: string; // Changed from Objekt
+  Preis: number | null;
+  Preis7Tage: number | null;
+  PreisSonntag: number | null;
 }

@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import React, { ReactNode } from 'react';
 
+import MainLayout from '@/components/layout/main-layout';
+
 // Define the props for the layout component
 interface ReportLayoutProps {
   children: ReactNode;
@@ -18,11 +20,6 @@ export async function generateMetadata({ params }: ReportLayoutProps): Promise<M
   };
 }
 
-export default function ReportLayout({ children }: ReportLayoutProps) {
-  return (
-    <div className="relative">
-      {/* Report-specific layout elements could go here */}
-      <div className="space-y-6">{children}</div>
-    </div>
-  );
+export default function ReportLayout({ children, params }: ReportLayoutProps) {
+  return <MainLayout>{children}</MainLayout>;
 }

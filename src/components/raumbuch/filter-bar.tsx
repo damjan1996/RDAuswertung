@@ -1,125 +1,178 @@
 'use client';
 
-import React from 'react';
+import React, { FormEvent, useState } from 'react';
 
 import Button from '@/components/ui/button';
-import Card from '@/components/ui/card';
 import Select from '@/components/ui/select';
 import { RaumbuchFilter } from '@/types/raumbuch.types';
 
-// Define FilterOptions type locally since it's not exported from raumbuch.types
+// Define FilterOptions type locally
 export interface FilterOptions {
   bereiche?: string[];
   gebaeudeteil?: string[];
   etage?: string[];
-  rg?: string[];
+  reinigungsgruppe?: string[]; // Geändert von rg zu reinigungsgruppe
 }
 
 // Use RaumbuchFilter as Filters type
 type Filters = RaumbuchFilter;
 
-interface FilterBarProps {
+interface FilterFormProps {
   filterOptions: FilterOptions;
-  filters: Filters;
-  onChange: (name: keyof Filters, value: string) => void;
-  onReset: () => void;
+  initialFilters?: Filters;
+  onSubmit: (filters: Filters) => void;
+  onReset?: () => void;
   className?: string;
 }
 
-export default function FilterBar({
+export default function FilterForm({
   filterOptions,
-  filters,
-  onChange,
+  initialFilters = {},
+  onSubmit,
   onReset,
   className = '',
-}: FilterBarProps) {
-  // Check if filters are applied
-  const hasActiveFilters = Object.values(filters).some(value => value && value !== '');
+}: FilterFormProps) {
+  const [filters, setFilters] = useState<Filters>(initialFilters);
+
+  // Handle filters change
+  const handleFilterChange = (name: keyof Filters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    // Create a serializable copy of the filters
+    const serializedFilters = { ...filters };
+    onSubmit(serializedFilters);
+  };
+
+  // Handle form reset
+  const handleResetClick = () => {
+    setFilters({});
+    if (onReset) {
+      onReset();
+    }
+  };
 
   return (
-    <Card title="Filter" className={`bg-white ${className}`}>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Bereich filter */}
-        <Select
-          id="bereich-filter"
-          label="Bereich"
-          value={filters.bereich || ''}
-          onChange={e => onChange('bereich', e.target.value)}
-        >
-          <option value="">Alle Bereiche</option>
-          {filterOptions.bereiche?.map(bereich => (
-            <option key={bereich} value={bereich}>
-              {bereich}
-            </option>
-          ))}
-        </Select>
+        <div>
+          <Select
+            id="bereich-filter"
+            label="Bereich"
+            value={filters.bereich || ''}
+            onChange={e => handleFilterChange('bereich', e.target.value)}
+          >
+            <option value="">Alle Bereiche</option>
+            {filterOptions.bereiche?.map(bereich => (
+              <option key={bereich} value={bereich}>
+                {bereich}
+              </option>
+            ))}
+          </Select>
+        </div>
 
         {/* Gebäudeteil filter */}
-        <Select
-          id="gebaeudeteil-filter"
-          label="Gebäudeteil"
-          value={filters.gebaeudeteil || ''}
-          onChange={e => onChange('gebaeudeteil', e.target.value)}
-        >
-          <option value="">Alle Gebäudeteile</option>
-          {filterOptions.gebaeudeteil?.map(gebaeudeteil => (
-            <option key={gebaeudeteil} value={gebaeudeteil}>
-              {gebaeudeteil}
-            </option>
-          ))}
-        </Select>
+        <div>
+          <Select
+            id="gebaeudeteil-filter"
+            label="Gebäudeteil"
+            value={filters.gebaeudeteil || ''}
+            onChange={e => handleFilterChange('gebaeudeteil', e.target.value)}
+          >
+            <option value="">Alle Gebäudeteile</option>
+            {filterOptions.gebaeudeteil?.map(gebaeudeteil => (
+              <option key={gebaeudeteil} value={gebaeudeteil}>
+                {gebaeudeteil}
+              </option>
+            ))}
+          </Select>
+        </div>
 
         {/* Etage filter */}
-        <Select
-          id="etage-filter"
-          label="Etage"
-          value={filters.etage || ''}
-          onChange={e => onChange('etage', e.target.value)}
-        >
-          <option value="">Alle Etagen</option>
-          {filterOptions.etage?.map(etage => (
-            <option key={etage} value={etage}>
-              {etage}
-            </option>
-          ))}
-        </Select>
+        <div>
+          <Select
+            id="etage-filter"
+            label="Etage"
+            value={filters.etage || ''}
+            onChange={e => handleFilterChange('etage', e.target.value)}
+          >
+            <option value="">Alle Etagen</option>
+            {filterOptions.etage?.map(etage => (
+              <option key={etage} value={etage}>
+                {etage}
+              </option>
+            ))}
+          </Select>
+        </div>
 
         {/* Reinigungsgruppe filter */}
-        <Select
-          id="rg-filter"
-          label="Reinigungsgruppe"
-          value={filters.rg || ''}
-          onChange={e => onChange('rg', e.target.value)}
-        >
-          <option value="">Alle Reinigungsgruppen</option>
-          {filterOptions.rg?.map(rg => (
-            <option key={rg} value={rg}>
-              {rg}
-            </option>
-          ))}
-        </Select>
+        <div>
+          <Select
+            id="reinigungsgruppe-filter" // Geändert von rg-filter zu reinigungsgruppe-filter
+            label="Reinigungsgruppe"
+            value={filters.reinigungsgruppe || ''} // Geändert von rg zu reinigungsgruppe
+            onChange={e => handleFilterChange('reinigungsgruppe', e.target.value)} // Geändert von 'rg' zu 'reinigungsgruppe'
+          >
+            <option value="">Alle Reinigungsgruppen</option>
+            {filterOptions.reinigungsgruppe?.map(
+              (
+                gruppe // Geändert von rg zu reinigungsgruppe
+              ) => (
+                <option key={gruppe} value={gruppe}>
+                  {gruppe}
+                </option>
+              )
+            )}
+          </Select>
+        </div>
       </div>
 
-      {/* Reset button - only show if filters are applied */}
-      {hasActiveFilters && (
-        <div className="mt-4 flex justify-end">
-          <Button onClick={onReset} variant="secondary" size="sm">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Filter zurücksetzen
-          </Button>
-        </div>
-      )}
-    </Card>
+      <div className="flex justify-between">
+        {/* Reset button */}
+        <button
+          type="button"
+          className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+          onClick={handleResetClick}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Zurücksetzen
+        </button>
+
+        {/* Submit button */}
+        <Button type="submit">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Filtern
+        </Button>
+      </div>
+    </form>
   );
 }

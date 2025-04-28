@@ -14,11 +14,11 @@ import type { RaumbuchRow, RaumbuchSummary, VisualizationData } from '@/types/ra
 type RaumbuchEntry = RaumbuchRow;
 
 // Definiere FilterOptions
-interface FilterOptions {
+export interface FilterOptions {
   bereiche: string[];
   gebaeudeteil: string[];
   etage: string[];
-  rg: string[];
+  reinigungsgruppe: string[]; // Geändert von rg zu reinigungsgruppe
 }
 
 /**
@@ -53,16 +53,22 @@ export function preprocessData(data: RaumbuchEntry[]): RaumbuchEntry[] {
   }
 
   const numericFields: (keyof RaumbuchEntry)[] = [
-    'qm',
+    'Menge',
     'Anzahl',
-    'RgJahr',
-    'RgMonat',
-    'qmMonat',
-    'WertMonat',
-    'StundenTag',
-    'StundenMonat',
-    'WertJahr',
-    'qmStunde',
+    'ReinigungstageJahr',
+    'ReinigungstageMonat',
+    'MengeAktivMonat',
+    'VkWertNettoMonat',
+    'StundeTag',
+    'StundeMonat',
+    'LeistungStunde',
+    'VkWertBruttoMonat',
+    'RgWertNettoMonat',
+    'RgWertBruttoMonat',
+    'MengeAktiv',
+    'MengeInAktiv',
+    'LeistungStundeIst',
+    'Aufschlag',
   ];
 
   return data.map(item => {
@@ -95,7 +101,7 @@ export function createFilterOptions(data: RaumbuchEntry[]): FilterOptions {
       bereiche: [],
       gebaeudeteil: [],
       etage: [],
-      rg: [],
+      reinigungsgruppe: [], // Geändert von rg zu reinigungsgruppe
     };
   }
 
@@ -103,20 +109,20 @@ export function createFilterOptions(data: RaumbuchEntry[]): FilterOptions {
   const bereiche = new Set<string>();
   const gebaeudeteil = new Set<string>();
   const etage = new Set<string>();
-  const rg = new Set<string>();
+  const reinigungsgruppe = new Set<string>(); // Geändert von rg zu reinigungsgruppe
 
   data.forEach(item => {
     if (item.Bereich) bereiche.add(item.Bereich);
     if (item.Gebaeudeteil) gebaeudeteil.add(item.Gebaeudeteil);
     if (item.Etage) etage.add(item.Etage);
-    if (item.RG) rg.add(item.RG);
+    if (item.Reinigungsgruppe) reinigungsgruppe.add(item.Reinigungsgruppe); // Geändert von RG zu Reinigungsgruppe
   });
 
   return {
     bereiche: [...bereiche].sort(),
     gebaeudeteil: [...gebaeudeteil].sort(),
     etage: [...etage].sort(),
-    rg: [...rg].sort(),
+    reinigungsgruppe: [...reinigungsgruppe].sort(), // Geändert von rg zu reinigungsgruppe
   };
 }
 

@@ -2,7 +2,6 @@
 
 import React, { FormEvent, useState } from 'react';
 
-import Button from '@/components/ui/button';
 import Select from '@/components/ui/select';
 import { RaumbuchFilter } from '@/types/raumbuch.types';
 
@@ -45,11 +44,13 @@ export default function FilterForm({
   // Handle form submission
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSubmit(filters);
+    // Create a serializable copy of the filters
+    const serializedFilters = { ...filters };
+    onSubmit(serializedFilters);
   };
 
   // Handle form reset
-  const handleReset = () => {
+  const handleResetClick = () => {
     setFilters({});
     if (onReset) {
       onReset();
@@ -113,10 +114,10 @@ export default function FilterForm({
         {/* Reinigungsgruppe filter */}
         <div>
           <Select
-            id="rg-filter"
+            id="reinigungsgruppe-filter"
             label="Reinigungsgruppe"
-            value={filters.rg || ''}
-            onChange={e => handleFilterChange('rg', e.target.value)}
+            value={filters.reinigungsgruppe || ''}
+            onChange={e => handleFilterChange('reinigungsgruppe', e.target.value)}
           >
             <option value="">Alle Reinigungsgruppen</option>
             {filterOptions.rg?.map(rg => (
@@ -129,7 +130,12 @@ export default function FilterForm({
       </div>
 
       <div className="flex justify-between">
-        <Button type="button" variant="secondary" onClick={handleReset}>
+        {/* Use a regular button element instead of the Button component for reset */}
+        <button
+          type="button"
+          className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+          onClick={handleResetClick}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 mr-2"
@@ -143,9 +149,13 @@ export default function FilterForm({
             />
           </svg>
           Zurücksetzen
-        </Button>
+        </button>
 
-        <Button type="submit">
+        {/* Use a regular button for submit too for consistency */}
+        <button
+          type="submit"
+          className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 mr-2"
@@ -159,7 +169,7 @@ export default function FilterForm({
             />
           </svg>
           Filtern
-        </Button>
+        </button>
       </div>
     </form>
   );

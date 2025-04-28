@@ -14,11 +14,14 @@ datasource db {
 model Standort {
   id             Int       @id @map("ID")
   bezeichnung    String    @map("Bezeichnung")
-  preis          Decimal   @map("Preis") @db.Decimal(10, 2)
-  preis7Tage     Decimal   @map("Preis7Tage") @db.Decimal(10, 2)
+  adresse        String?   @map("Adresse")
+  strasse        String?   @map("Strasse")
+  plz            String?   @map("PLZ")
+  ort            String?   @map("Ort")
 
   // Relationships
   raumbuch       Raumbuch[]
+  gebaeude       Gebaeude[] // Renamed from objekt
   bereich        Bereich[]
   gebaeudeteil   Gebaeudeteil[]
   etage          Etage[]
@@ -26,14 +29,31 @@ model Standort {
   @@map("BIRD.Standort")
 }
 
+// Gebaeude model - represents a building linked to a location (Renamed from Objekt)
+model Gebaeude {
+  id             Int       @id @map("ID")
+  firma_ID       Int       @map("Firma_ID")
+  standort_ID    Int       @map("Standort_ID")
+  bezeichnung    String    @map("Bezeichnung")
+  preis          Decimal   @map("Preis") @db.Decimal(10, 2)
+  preis7Tage     Decimal   @map("Preis7Tage") @db.Decimal(10, 2)
+  preisSonntag   Decimal   @map("PreisSonntag") @db.Decimal(10, 2)
+
+  // Relationships
+  standort       Standort  @relation(fields: [standort_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  raumbuch       Raumbuch[]
+
+  @@map("BIRD.Gebaeude") // Changed from BIRD.Objekt
+}
+
 // Bereich model - represents an area in a building
 model Bereich {
   id          Int       @id @map("ID")
   bezeichnung String    @map("Bezeichnung")
-  standortId  Int       @map("Standort_ID")
+  standort_ID Int       @map("Standort_ID")
 
   // Relationships
-  standort    Standort  @relation(fields: [standortId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  standort    Standort  @relation(fields: [standort_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
   raumbuch    Raumbuch[]
 
   @@map("BIRD.Bereich")
@@ -43,10 +63,10 @@ model Bereich {
 model Gebaeudeteil {
   id          Int       @id @map("ID")
   bezeichnung String    @map("Bezeichnung")
-  standortId  Int       @map("Standort_ID")
+  standort_ID Int       @map("Standort_ID")
 
   // Relationships
-  standort    Standort  @relation(fields: [standortId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  standort    Standort  @relation(fields: [standort_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
   raumbuch    Raumbuch[]
 
   @@map("BIRD.Gebaeudeteil")
@@ -56,10 +76,10 @@ model Gebaeudeteil {
 model Etage {
   id          Int       @id @map("ID")
   bezeichnung String    @map("Bezeichnung")
-  standortId  Int       @map("Standort_ID")
+  standort_ID Int       @map("Standort_ID")
 
   // Relationships
-  standort    Standort  @relation(fields: [standortId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  standort    Standort  @relation(fields: [standort_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
   raumbuch    Raumbuch[]
 
   @@map("BIRD.Etage")
@@ -74,6 +94,17 @@ model Reinigungsgruppe {
   raumbuch    Raumbuch[]
 
   @@map("BIRD.Reinigungsgruppe")
+}
+
+// Einheit model - represents a unit of measurement
+model Einheit {
+  id          Int       @id @map("ID")
+  bezeichnung String    @map("Bezeichnung")
+
+  // Relationships
+  raumbuch    Raumbuch[]
+
+  @@map("BIRD.Einheit")
 }
 
 // Reinigungsintervall model - represents cleaning interval
@@ -102,48 +133,74 @@ model ReinigungsTage {
 // ReinigungsintervallTage model - represents days per cleaning interval
 model ReinigungsintervallTage {
   id                  Int       @id @default(autoincrement())
-  reinigungsintervallId Int       @map("Reinigungsintervall_ID")
+  reinigungsintervall_ID Int       @map("Reinigungsintervall_ID")
   anzahl              Int       @map("Anzahl")
   reinigungstage      Float     @map("Reinigungstage")
 
   // Relationships
-  reinigungsintervall Reinigungsintervall @relation(fields: [reinigungsintervallId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reinigungsintervall Reinigungsintervall @relation(fields: [reinigungsintervall_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
   raumbuch    Raumbuch[]
 
-  @@unique([reinigungsintervallId, anzahl])
+  @@unique([reinigungsintervall_ID, anzahl])
   @@map("BIRD.ReinigungsintervallTage")
 }
 
 // Raumbuch model - main model for room data
 model Raumbuch {
   id                  Int       @id @map("ID")
+  firma_ID            Int       @map("Firma_ID")
+  standort_ID         Int       @map("Standort_ID")
+  gebaeude_ID         Int       @map("Gebaeude_ID") // Changed from objekt_ID
   raumnummer          String?   @map("Raumnummer")
-  standortId          Int       @map("Standort_ID")
-  bereichId           Int       @map("Bereich_ID")
-  gebaeudeteilId      Int       @map("Gebaeudeteil_ID")
-  etageId             Int       @map("Etage_ID")
+  bereich             String?   @map("Bereich")
+  gebaeudeteil        String?   @map("Gebaeudeteil")
+  etage               String?   @map("Etage")
   bezeichnung         String?   @map("Bezeichnung")
-  reinigungsgruppeId  Int       @map("Reinigungsgruppe_ID")
-  qm                  Float     @map("qm")
-  anzahl              Int       @map("Anzahl")
-  reinigungsintervallId Int     @map("Reinigungsintervall_ID")
-  qmStunde            Float     @map("qmStunde")
-  reinigungsTageId    Int?      @map("ReinigungsTage_ID")
-  bemerkung           String?   @map("Bemerkung")
+  reinigungsgruppe    String?   @map("Reinigungsgruppe")
+  menge               Float?    @map("Menge")
+  mengeAktiv          Float?    @map("MengeAktiv")
+  mengeInAktiv        Float?    @map("MengeInAktiv")
+  einheit             String?   @map("Einheit")
+  anzahl              Int?      @map("Anzahl")
+  reinigungsintervall String?   @map("Reinigungsintervall")
+  reinigungstageMonat Float?    @map("ReinigungstageMonat")
+  reinigungstageJahr  Float?    @map("ReinigungstageJahr")
+  leistungStunde      Float?    @map("LeistungStunde")
+  leistungStundeIst   Float?    @map("LeistungStundeIst")
+  aufschlag           Float?    @map("Aufschlag")
+  stundeTag           Float?    @map("StundeTag")
+  stundeMonat         Float?    @map("StundeMonat")
+  mengeAktivMonat     Float?    @map("MengeAktivMonat")
+  vkWertNettoMonat    Float?    @map("VkWertNettoMonat")
+  vkWertBruttoMonat   Float?    @map("VkWertBruttoMonat")
+  rgWertNettoMonat    Float?    @map("RgWertNettoMonat")
+  rgWertBruttoMonat   Float?    @map("RgWertBruttoMonat")
+  reinigungsTage      String?   @map("ReinigungsTage")
   reduzierung         String?   @map("Reduzierung")
-
-  // Computed fields - will be calculated in application
-  // rgJahr, rgMonat, qmMonat, wertMonat, stundenTag, stundenMonat, wertJahr
+  bemerkung           String?   @map("Bemerkung")
+  bereich_ID          Int       @map("Bereich_ID")
+  gebaeudeteil_ID     Int       @map("Gebaeudeteil_ID")
+  etage_ID            Int       @map("Etage_ID")
+  reinigungsgruppe_ID Int       @map("Reinigungsgruppe_ID")
+  einheit_ID          Int?      @map("Einheit_ID")
+  reinigungsintervall_ID Int?   @map("Reinigungsintervall_ID")
+  reinigungsTage_ID   Int?      @map("ReinigungsTage_ID")
+  lfdNr               Int?      @map("LfdNr")
+  xStatus             Int?      @map("xStatus")
+  xDatum              DateTime? @map("xDatum")
+  xBenutzer           String?   @map("xBenutzer")
+  xVersion            Int?      @map("xVersion")
 
   // Relationships
-  standort            Standort  @relation(fields: [standortId], references: [id])
-  bereich             Bereich   @relation(fields: [bereichId], references: [id])
-  gebaeudeteil        Gebaeudeteil @relation(fields: [gebaeudeteilId], references: [id])
-  etage               Etage     @relation(fields: [etageId], references: [id])
-  reinigungsgruppe    Reinigungsgruppe @relation(fields: [reinigungsgruppeId], references: [id])
-  reinigungsintervall Reinigungsintervall @relation(fields: [reinigungsintervallId], references: [id])
-  reinigungsTage      ReinigungsTage? @relation(fields: [reinigungsTageId], references: [id])
-  reinigungsintervallTage ReinigungsintervallTage? @relation(fields: [reinigungsintervallId, anzahl], references: [reinigungsintervallId, anzahl], onDelete: NoAction, onUpdate: NoAction)
+  standort            Standort  @relation(fields: [standort_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gebaeude            Gebaeude  @relation(fields: [gebaeude_ID], references: [id], onDelete: NoAction, onUpdate: NoAction) // Changed from objekt
+  bereichRel          Bereich   @relation(fields: [bereich_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gebaeudeteilRel     Gebaeudeteil @relation(fields: [gebaeudeteil_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  etageRel            Etage     @relation(fields: [etage_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reinigungsgruppeRel Reinigungsgruppe @relation(fields: [reinigungsgruppe_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  einheitRel          Einheit?  @relation(fields: [einheit_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reinigungsintervallRel Reinigungsintervall? @relation(fields: [reinigungsintervall_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reinigungsTagRel    ReinigungsTage? @relation(fields: [reinigungsTage_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("BIRD.Raumbuch")
 }

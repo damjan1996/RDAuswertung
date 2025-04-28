@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { calculateSummary } from '@/services/analysis/raumbuch-analysis';
-import { getRaumbuchData, getStandortById } from '@/services/database/queries';
+import { getGebaeudeById, getRaumbuchData } from '@/services/database/queries';
 import { generateExcel } from '@/services/export/excel-export';
 
 // Validate ID parameter
@@ -22,18 +22,18 @@ const querySchema = z.object({
   bereich: z.string().optional(),
   gebaeudeteil: z.string().optional(),
   etage: z.string().optional(),
-  rg: z.string().optional(),
+  reinigungsgruppe: z.string().optional(), // Geändert von "rg" zu "reinigungsgruppe"
 });
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Validate standort ID
+    // Validate gebaeude ID
     const validatedParams = paramsSchema.safeParse({ id: params.id });
     if (!validatedParams.success) {
-      return NextResponse.json({ error: 'Invalid standort ID' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid gebaeude ID' }, { status: 400 });
     }
 
-    const standortId = Number(params.id);
+    const gebaeudeId = Number(params.id); // Geändert von standortId zu gebaeudeId
 
     // Validate query parameters for filtering
     const searchParams = request.nextUrl.searchParams;
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       bereich: searchParams.get('bereich') || undefined,
       gebaeudeteil: searchParams.get('gebaeudeteil') || undefined,
       etage: searchParams.get('etage') || undefined,
-      rg: searchParams.get('rg') || undefined,
+      reinigungsgruppe: searchParams.get('reinigungsgruppe') || undefined, // Geändert von "rg" zu "reinigungsgruppe"
     };
 
     const validatedQuery = querySchema.safeParse(queryParams);
@@ -49,14 +49,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
     }
 
-    // Get standort information
-    const standort = await getStandortById(standortId);
-    if (!standort) {
-      return NextResponse.json({ error: 'Standort not found' }, { status: 404 });
+    // Get gebaeude information
+    const gebaeude = await getGebaeudeById(gebaeudeId); // Geändert von getStandortById zu getGebaeudeById
+    if (!gebaeude) {
+      return NextResponse.json({ error: 'Gebaeude not found' }, { status: 404 });
     }
 
     // Get raumbuch data with filters
-    let raumbuchData = await getRaumbuchData(standortId);
+    let raumbuchData = await getRaumbuchData(gebaeudeId);
 
     // Apply filters if any are provided
     const filters = validatedQuery.success ? validatedQuery.data : {};
@@ -69,18 +69,20 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (filters.etage) {
       raumbuchData = raumbuchData.filter(item => item.Etage === filters.etage);
     }
-    if (filters.rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === filters.rg);
+    if (filters.reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(
+        item => item.Reinigungsgruppe === filters.reinigungsgruppe
+      ); // Geändert von "RG" zu "Reinigungsgruppe"
     }
 
     // Calculate summary for Excel sheets
     const summary = calculateSummary(raumbuchData);
 
     // Generate Excel file
-    const excelBuffer = await generateExcel(raumbuchData, standort.bezeichnung, summary);
+    const excelBuffer = await generateExcel(raumbuchData, gebaeude.bezeichnung, summary);
 
     // Set response headers
-    const filename = `Raumbuch_Auswertung_${standort.bezeichnung}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const filename = `Raumbuch_Auswertung_${gebaeude.bezeichnung}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
     return new NextResponse(excelBuffer, {
       status: 200,

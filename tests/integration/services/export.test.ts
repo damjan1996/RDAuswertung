@@ -7,6 +7,7 @@ import * as pdfExport from '@/services/export/pdf-export';
 jest.mock('@/services/database/queries', () => ({
   getRaumbuchData: jest.fn(),
   getStandortById: jest.fn(),
+  getGebaeudeById: jest.fn(), // Neu: Gebaeude statt Objekt
 }));
 
 jest.mock('@/services/export/excel-export', () => ({
@@ -78,19 +79,19 @@ const mockGETExcel = async (req: MockNextRequest, { params }: { params: { id: st
   try {
     // Validiere ID
     if (isNaN(Number(params.id))) {
-      return MockNextResponse.json({ error: 'Invalid standort ID' }, { status: 400 });
+      return MockNextResponse.json({ error: 'Invalid gebaeude ID' }, { status: 400 }); // Geändert von standort zu gebaeude
     }
 
-    const standortId = Number(params.id);
+    const gebaeudeId = Number(params.id); // Geändert von standortId zu gebaeudeId
 
-    // Hole Standort-Information
-    const standort = await databaseQueries.getStandortById(standortId);
-    if (!standort) {
-      return MockNextResponse.json({ error: 'Standort not found' }, { status: 404 });
+    // Hole Gebaeude-Information
+    const gebaeude = await databaseQueries.getGebaeudeById(gebaeudeId); // Geändert zu getGebaeudeById
+    if (!gebaeude) {
+      return MockNextResponse.json({ error: 'Gebaeude not found' }, { status: 404 }); // Geändert von Standort zu Gebaeude
     }
 
     // Hole Raumbuch-Daten
-    let raumbuchData = await databaseQueries.getRaumbuchData(standortId);
+    let raumbuchData = await databaseQueries.getRaumbuchData(gebaeudeId);
 
     // Filter anwenden
     const bereich = req.nextUrl.searchParams.get('bereich');
@@ -108,9 +109,9 @@ const mockGETExcel = async (req: MockNextRequest, { params }: { params: { id: st
       raumbuchData = raumbuchData.filter(item => item.Etage === etage);
     }
 
-    const rg = req.nextUrl.searchParams.get('rg');
-    if (rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === rg);
+    const reinigungsgruppe = req.nextUrl.searchParams.get('reinigungsgruppe'); // Geändert von rg zu reinigungsgruppe
+    if (reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(item => item.Reinigungsgruppe === reinigungsgruppe); // Geändert von RG zu Reinigungsgruppe
     }
 
     // Zusammenfassung berechnen
@@ -119,13 +120,13 @@ const mockGETExcel = async (req: MockNextRequest, { params }: { params: { id: st
     // Excel-Datei generieren
     const excelBuffer = await excelExport.generateExcel(
       raumbuchData,
-      standort.bezeichnung,
+      gebaeude.bezeichnung, // Gebaeude statt Standort
       summary
     );
 
     // Dateiname
     const date = new Date().toISOString().split('T')[0];
-    const filename = `Raumbuch_Auswertung_${standort.bezeichnung}_${date}.xlsx`;
+    const filename = `Raumbuch_Auswertung_${gebaeude.bezeichnung}_${date}.xlsx`; // Gebaeude statt Standort
 
     // Rückgabe
     const response = new MockNextResponse(excelBuffer, {
@@ -148,19 +149,19 @@ const mockGETPDF = async (req: MockNextRequest, { params }: { params: { id: stri
   try {
     // Validiere ID
     if (isNaN(Number(params.id))) {
-      return MockNextResponse.json({ error: 'Invalid standort ID' }, { status: 400 });
+      return MockNextResponse.json({ error: 'Invalid gebaeude ID' }, { status: 400 }); // Geändert von standort zu gebaeude
     }
 
-    const standortId = Number(params.id);
+    const gebaeudeId = Number(params.id); // Geändert von standortId zu gebaeudeId
 
-    // Hole Standort-Information
-    const standort = await databaseQueries.getStandortById(standortId);
-    if (!standort) {
-      return MockNextResponse.json({ error: 'Standort not found' }, { status: 404 });
+    // Hole Gebaeude-Information
+    const gebaeude = await databaseQueries.getGebaeudeById(gebaeudeId); // Geändert zu getGebaeudeById
+    if (!gebaeude) {
+      return MockNextResponse.json({ error: 'Gebaeude not found' }, { status: 404 }); // Geändert von Standort zu Gebaeude
     }
 
     // Hole Raumbuch-Daten
-    let raumbuchData = await databaseQueries.getRaumbuchData(standortId);
+    let raumbuchData = await databaseQueries.getRaumbuchData(gebaeudeId);
 
     // Filter anwenden
     const bereich = req.nextUrl.searchParams.get('bereich');
@@ -178,9 +179,9 @@ const mockGETPDF = async (req: MockNextRequest, { params }: { params: { id: stri
       raumbuchData = raumbuchData.filter(item => item.Etage === etage);
     }
 
-    const rg = req.nextUrl.searchParams.get('rg');
-    if (rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === rg);
+    const reinigungsgruppe = req.nextUrl.searchParams.get('reinigungsgruppe'); // Geändert von rg zu reinigungsgruppe
+    if (reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(item => item.Reinigungsgruppe === reinigungsgruppe); // Geändert von RG zu Reinigungsgruppe
     }
 
     // Zusammenfassung und Visualisierungsdaten berechnen
@@ -188,14 +189,15 @@ const mockGETPDF = async (req: MockNextRequest, { params }: { params: { id: stri
     const visualizationData = raumbuchAnalysis.prepareDataForVisualization(raumbuchData);
 
     // PDF-Datei generieren
-    const pdfBuffer = await pdfExport.generatePdf(raumbuchData, standort.bezeichnung, {
+    const pdfBuffer = await pdfExport.generatePdf(raumbuchData, gebaeude.bezeichnung, {
+      // Gebaeude statt Standort
       summary,
       visualizationData,
     });
 
     // Dateiname
     const date = new Date().toISOString().split('T')[0];
-    const filename = `Raumbuch_Auswertung_${standort.bezeichnung}_${date}.pdf`;
+    const filename = `Raumbuch_Auswertung_${gebaeude.bezeichnung}_${date}.pdf`; // Gebaeude statt Standort
 
     // Rückgabe
     const response = new MockNextResponse(pdfBuffer, {
@@ -215,7 +217,15 @@ const mockGETPDF = async (req: MockNextRequest, { params }: { params: { id: stri
 
 describe('Export-Service Tests', () => {
   // Mock-Daten für die Tests
-  const mockStandort = { id: 1, bezeichnung: 'Teststandort', preis: 25.5, preis7Tage: 30 };
+  const mockGebaeude = {
+    id: 1,
+    bezeichnung: 'Testgebaeude',
+    preis: 25.5,
+    preis7Tage: 30,
+    preisSonntag: 35,
+    firma_ID: 1,
+    standort_ID: 1,
+  }; // Gebaeude statt Standort
 
   const mockRaumbuchData = [
     {
@@ -225,22 +235,45 @@ describe('Export-Service Tests', () => {
       Gebaeudeteil: 'Hauptgebäude',
       Etage: 'EG',
       Bezeichnung: 'Büro 1',
-      RG: 'RG1',
-      qm: 25,
+      Reinigungsgruppe: 'RG1', // Geändert von RG zu Reinigungsgruppe
+      Menge: 25, // Geändert von qm zu Menge
       Anzahl: 5,
-      Intervall: 'Täglich',
-      RgJahr: 250,
-      RgMonat: 20.83,
-      qmMonat: 520.75,
-      WertMonat: 150,
-      StundenTag: 0.5,
-      StundenMonat: 10.42,
-      WertJahr: 1800,
-      qmStunde: 50,
-      Reinigungstage: '',
+      Reinigungsintervall: 'Täglich', // Geändert von Intervall zu Reinigungsintervall
+      ReinigungstageJahr: 250, // Geändert von RgJahr zu ReinigungstageJahr
+      ReinigungstageMonat: 20.83, // Geändert von RgMonat zu ReinigungstageMonat
+      MengeAktivMonat: 520.75, // Geändert von qmMonat zu MengeAktivMonat
+      VkWertNettoMonat: 150, // Geändert von WertMonat zu VkWertNettoMonat
+      StundeTag: 0.5, // Geändert von StundenTag zu StundeTag
+      StundeMonat: 10.42, // Geändert von StundenMonat zu StundeMonat
+      VkWertBruttoMonat: 178.5, // Neu: VkWertBruttoMonat
+      RgWertNettoMonat: 135, // Neu: RgWertNettoMonat
+      RgWertBruttoMonat: 160.65, // Neu: RgWertBruttoMonat
+      LeistungStunde: 50, // Geändert von qmStunde zu LeistungStunde
+      ReinigungsTage: '',
       Bemerkung: '',
       Reduzierung: '',
       Standort_ID: 1,
+      Gebaeude_ID: 1, // Neu: Gebaeude statt Objekt
+      Firma_ID: 1, // Neu
+      Standort: 'Teststandort', // Neu
+      Gebaeude: 'Testgebaeude', // Neu
+      MengeAktiv: 25, // Neu
+      MengeInAktiv: 0, // Neu
+      Einheit: 'm²', // Neu
+      LeistungStundeIst: 50, // Neu
+      Aufschlag: 0, // Neu
+      Bereich_ID: 1, // Neu
+      Gebaeudeteil_ID: 1, // Neu
+      Etage_ID: 1, // Neu
+      Reinigungsgruppe_ID: 1, // Neu
+      Einheit_ID: 1, // Neu
+      Reinigungsintervall_ID: 1, // Neu
+      ReinigungsTage_ID: null, // Neu
+      LfdNr: 1, // Neu
+      xStatus: 1, // Neu
+      xDatum: new Date(), // Neu
+      xBenutzer: 'Test', // Neu
+      xVersion: 1, // Neu
     },
     {
       ID: 2,
@@ -249,37 +282,62 @@ describe('Export-Service Tests', () => {
       Gebaeudeteil: 'Hauptgebäude',
       Etage: 'EG',
       Bezeichnung: 'Konferenzraum',
-      RG: 'RG2',
-      qm: 40,
+      Reinigungsgruppe: 'RG2', // Geändert
+      Menge: 40, // Geändert
       Anzahl: 5,
-      Intervall: 'Täglich',
-      RgJahr: 250,
-      RgMonat: 20.83,
-      qmMonat: 833.2,
-      WertMonat: 250,
-      StundenTag: 0.8,
-      StundenMonat: 16.67,
-      WertJahr: 3000,
-      qmStunde: 50,
-      Reinigungstage: '',
+      Reinigungsintervall: 'Täglich', // Geändert
+      ReinigungstageJahr: 250, // Geändert
+      ReinigungstageMonat: 20.83, // Geändert
+      MengeAktivMonat: 833.2, // Geändert
+      VkWertNettoMonat: 250, // Geändert
+      StundeTag: 0.8, // Geändert
+      StundeMonat: 16.67, // Geändert
+      VkWertBruttoMonat: 297.5, // Neu
+      RgWertNettoMonat: 225, // Neu
+      RgWertBruttoMonat: 267.75, // Neu
+      LeistungStunde: 50, // Geändert
+      ReinigungsTage: '',
       Bemerkung: '',
       Reduzierung: '',
       Standort_ID: 1,
+      Gebaeude_ID: 1, // Neu
+      Firma_ID: 1, // Neu
+      Standort: 'Teststandort', // Neu
+      Gebaeude: 'Testgebaeude', // Neu
+      MengeAktiv: 40, // Neu
+      MengeInAktiv: 0, // Neu
+      Einheit: 'm²', // Neu
+      LeistungStundeIst: 50, // Neu
+      Aufschlag: 0, // Neu
+      Bereich_ID: 2, // Neu
+      Gebaeudeteil_ID: 1, // Neu
+      Etage_ID: 1, // Neu
+      Reinigungsgruppe_ID: 2, // Neu
+      Einheit_ID: 1, // Neu
+      Reinigungsintervall_ID: 1, // Neu
+      ReinigungsTage_ID: null, // Neu
+      LfdNr: 2, // Neu
+      xStatus: 1, // Neu
+      xDatum: new Date(), // Neu
+      xBenutzer: 'Test', // Neu
+      xVersion: 1, // Neu
     },
   ];
 
   const mockSummary = {
     totalRooms: 2,
-    totalQm: 65,
-    totalQmMonat: 1353.95,
-    totalWertMonat: 400,
-    totalWertJahr: 4800,
-    totalStundenMonat: 27.09,
+    totalMenge: 65, // Geändert von totalQm
+    totalMengeAktivMonat: 1353.95, // Geändert von totalQmMonat
+    totalVkWertNettoMonat: 400, // Geändert von totalWertMonat
+    totalVkWertBruttoMonat: 476, // Neu
+    totalRgWertNettoMonat: 360, // Neu
+    totalRgWertBruttoMonat: 428.4, // Neu
+    totalStundenMonat: 27.09, // Behalten
   };
 
   const mockVisualizationData = {
     bereichData: { Büro: 25, Konferenz: 40 },
-    rgData: { RG1: 150, RG2: 250 },
+    rgData: { RG1: 150, RG2: 250 }, // Diese Daten sind unverändert, da sie die Visualisierung repräsentieren
     etageData: { EG: 27.09 },
   };
 
@@ -292,7 +350,7 @@ describe('Export-Service Tests', () => {
     jest.clearAllMocks();
 
     // Standard-Implementierung der Mocks
-    (databaseQueries.getStandortById as jest.Mock).mockResolvedValue(mockStandort);
+    (databaseQueries.getGebaeudeById as jest.Mock).mockResolvedValue(mockGebaeude); // Geändert zu getGebaeudeById
     (databaseQueries.getRaumbuchData as jest.Mock).mockResolvedValue(mockRaumbuchData);
     (raumbuchAnalysis.calculateSummary as jest.Mock).mockReturnValue(mockSummary);
     (raumbuchAnalysis.prepareDataForVisualization as jest.Mock).mockReturnValue(
@@ -310,12 +368,12 @@ describe('Export-Service Tests', () => {
       const res = await mockGETExcel(req, { params });
 
       // Überprüfe, ob die richtigen Dienste aufgerufen wurden
-      expect(databaseQueries.getStandortById).toHaveBeenCalledWith(1);
+      expect(databaseQueries.getGebaeudeById).toHaveBeenCalledWith(1); // Geändert zu getGebaeudeById
       expect(databaseQueries.getRaumbuchData).toHaveBeenCalledWith(1);
       expect(raumbuchAnalysis.calculateSummary).toHaveBeenCalledWith(mockRaumbuchData);
       expect(excelExport.generateExcel).toHaveBeenCalledWith(
         mockRaumbuchData,
-        mockStandort.bezeichnung,
+        mockGebaeude.bezeichnung, // Gebaeude statt Standort
         mockSummary
       );
 
@@ -325,7 +383,7 @@ describe('Export-Service Tests', () => {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       );
       expect(res.headers.get('Content-Disposition')).toContain(
-        `attachment; filename="Raumbuch_Auswertung_${mockStandort.bezeichnung}`
+        `attachment; filename="Raumbuch_Auswertung_${mockGebaeude.bezeichnung}` // Gebaeude statt Standort
       );
 
       // Überprüfe, ob der Buffer korrekt zurückgegeben wird
@@ -346,9 +404,9 @@ describe('Export-Service Tests', () => {
       );
     });
 
-    test('Gibt einen 404-Fehler zurück, wenn der Standort nicht gefunden wird', async () => {
+    test('Gibt einen 404-Fehler zurück, wenn das Gebäude nicht gefunden wird', async () => {
       // Mock anpassen, um null zurückzugeben
-      (databaseQueries.getStandortById as jest.Mock).mockResolvedValue(null);
+      (databaseQueries.getGebaeudeById as jest.Mock).mockResolvedValue(null); // Geändert zu getGebaeudeById
 
       const req = new MockNextRequest('/api/export/excel/999');
       const params = { id: '999' };
@@ -358,7 +416,7 @@ describe('Export-Service Tests', () => {
       expect(res.status).toBe(404);
       const data = await res.json();
       expect(data).toHaveProperty('error');
-      expect(data.error).toBe('Standort not found');
+      expect(data.error).toBe('Gebaeude not found'); // Geändert von Standort zu Gebaeude
     });
 
     test('Validiert ungültige ID-Parameter', async () => {
@@ -370,7 +428,7 @@ describe('Export-Service Tests', () => {
       expect(res.status).toBe(400);
       const data = await res.json();
       expect(data).toHaveProperty('error');
-      expect(data.error).toBe('Invalid standort ID');
+      expect(data.error).toBe('Invalid gebaeude ID'); // Geändert von standort zu gebaeude
     });
 
     test('Behandelt Datenbankfehler', async () => {
@@ -399,13 +457,13 @@ describe('Export-Service Tests', () => {
       const res = await mockGETPDF(req, { params });
 
       // Überprüfe, ob die richtigen Dienste aufgerufen wurden
-      expect(databaseQueries.getStandortById).toHaveBeenCalledWith(1);
+      expect(databaseQueries.getGebaeudeById).toHaveBeenCalledWith(1); // Geändert zu getGebaeudeById
       expect(databaseQueries.getRaumbuchData).toHaveBeenCalledWith(1);
       expect(raumbuchAnalysis.calculateSummary).toHaveBeenCalledWith(mockRaumbuchData);
       expect(raumbuchAnalysis.prepareDataForVisualization).toHaveBeenCalledWith(mockRaumbuchData);
       expect(pdfExport.generatePdf).toHaveBeenCalledWith(
         mockRaumbuchData,
-        mockStandort.bezeichnung,
+        mockGebaeude.bezeichnung, // Gebaeude statt Standort
         {
           summary: mockSummary,
           visualizationData: mockVisualizationData,
@@ -416,7 +474,7 @@ describe('Export-Service Tests', () => {
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('application/pdf');
       expect(res.headers.get('Content-Disposition')).toContain(
-        `attachment; filename="Raumbuch_Auswertung_${mockStandort.bezeichnung}`
+        `attachment; filename="Raumbuch_Auswertung_${mockGebaeude.bezeichnung}` // Gebaeude statt Standort
       );
 
       // Überprüfe, ob der Buffer korrekt zurückgegeben wird
@@ -424,9 +482,9 @@ describe('Export-Service Tests', () => {
       expect(new Uint8Array(buffer)).toEqual(new Uint8Array(mockPdfBuffer.buffer));
     });
 
-    test('Gibt einen 404-Fehler zurück, wenn der Standort nicht gefunden wird', async () => {
+    test('Gibt einen 404-Fehler zurück, wenn das Gebäude nicht gefunden wird', async () => {
       // Mock anpassen, um null zurückzugeben
-      (databaseQueries.getStandortById as jest.Mock).mockResolvedValue(null);
+      (databaseQueries.getGebaeudeById as jest.Mock).mockResolvedValue(null); // Geändert zu getGebaeudeById
 
       const req = new MockNextRequest('/api/export/pdf/999');
       const params = { id: '999' };
@@ -436,7 +494,7 @@ describe('Export-Service Tests', () => {
       expect(res.status).toBe(404);
       const data = await res.json();
       expect(data).toHaveProperty('error');
-      expect(data.error).toBe('Standort not found');
+      expect(data.error).toBe('Gebaeude not found'); // Geändert von Standort zu Gebaeude
     });
   });
 });

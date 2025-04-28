@@ -38,25 +38,25 @@ export async function generatePdf(
     // Formatierte Daten für die Tabelle vorbereiten
     const formattedData = data.map(item => ({
       ...item,
-      qm: formatSquareMeters(item.qm),
-      RgJahr: formatNumber(item.RgJahr),
-      RgMonat: formatNumber(item.RgMonat),
-      qmMonat: formatSquareMeters(item.qmMonat),
-      WertMonat: formatCurrency(item.WertMonat),
-      StundenTag: formatHours(item.StundenTag, 3),
-      StundenMonat: formatHours(item.StundenMonat),
-      WertJahr: formatCurrency(item.WertJahr),
-      qmStunde: formatNumber(item.qmStunde),
+      Menge: formatSquareMeters(item.Menge),
+      ReinigungstageJahr: formatNumber(item.ReinigungstageJahr),
+      ReinigungstageMonat: formatNumber(item.ReinigungstageMonat),
+      MengeAktivMonat: formatSquareMeters(item.MengeAktivMonat),
+      VkWertNettoMonat: formatCurrency(item.VkWertNettoMonat),
+      StundeTag: formatHours(item.StundeTag, 3),
+      StundeMonat: formatHours(item.StundeMonat),
+      VkWertNettoJahr: formatCurrency(item.VkWertNettoMonat ? item.VkWertNettoMonat * 12 : 0),
+      LeistungStunde: formatNumber(item.LeistungStunde),
     }));
 
     // Formatierte Zusammenfassungsdaten
     const formattedSummary = chartParams?.summary
       ? {
           totalRooms: chartParams.summary.totalRooms,
-          totalQm: formatSquareMeters(chartParams.summary.totalQm),
-          totalQmMonat: formatSquareMeters(chartParams.summary.totalQmMonat),
-          totalWertMonat: formatCurrency(chartParams.summary.totalWertMonat),
-          totalWertJahr: formatCurrency(chartParams.summary.totalWertJahr),
+          totalMenge: formatSquareMeters(chartParams.summary.totalMenge),
+          totalMengeAktivMonat: formatSquareMeters(chartParams.summary.totalMengeAktivMonat),
+          totalVkWertNettoMonat: formatCurrency(chartParams.summary.totalVkWertNettoMonat),
+          totalVkWertNettoJahr: formatCurrency(chartParams.summary.totalVkWertNettoMonat * 12),
           totalStundenMonat: formatHours(chartParams.summary.totalStundenMonat),
         }
       : null;
@@ -240,15 +240,15 @@ async function generateHtmlTemplate(
           </div>
           <div class="summary-box">
             <h3>Gesamtfläche</h3>
-            <div class="value">{{summary.totalQm}}</div>
+            <div class="value">{{summary.totalMenge}}</div>
           </div>
           <div class="summary-box">
             <h3>Monatlicher Wert</h3>
-            <div class="value">{{summary.totalWertMonat}}</div>
+            <div class="value">{{summary.totalVkWertNettoMonat}}</div>
           </div>
           <div class="summary-box">
             <h3>Jährlicher Wert</h3>
-            <div class="value">{{summary.totalWertJahr}}</div>
+            <div class="value">{{summary.totalVkWertNettoJahr}}</div>
           </div>
           <div class="summary-box">
             <h3>Arbeitsstunden/Monat</h3>
@@ -286,7 +286,7 @@ async function generateHtmlTemplate(
                 <th>Etage</th>
                 <th>Bezeichnung</th>
                 <th>RG</th>
-                <th>qm</th>
+                <th>m²</th>
                 <th>€/Monat</th>
                 <th>h/Monat</th>
                 <th>€/Jahr</th>
@@ -300,11 +300,11 @@ async function generateHtmlTemplate(
                 <td>{{this.Gebaeudeteil}}</td>
                 <td>{{this.Etage}}</td>
                 <td>{{this.Bezeichnung}}</td>
-                <td>{{this.RG}}</td>
-                <td class="text-right">{{this.qm}}</td>
-                <td class="text-right">{{this.WertMonat}}</td>
-                <td class="text-right">{{this.StundenMonat}}</td>
-                <td class="text-right">{{this.WertJahr}}</td>
+                <td>{{this.Reinigungsgruppe}}</td>
+                <td class="text-right">{{this.Menge}}</td>
+                <td class="text-right">{{this.VkWertNettoMonat}}</td>
+                <td class="text-right">{{this.StundeMonat}}</td>
+                <td class="text-right">{{this.VkWertNettoJahr}}</td>
               </tr>
               {{/each}}
             </tbody>

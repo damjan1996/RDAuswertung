@@ -71,19 +71,19 @@ export async function generateExcel(
     { header: 'Gebäudeteil', key: 'Gebaeudeteil', width: 15 },
     { header: 'Etage', key: 'Etage', width: 10 },
     { header: 'Bezeichnung', key: 'Bezeichnung', width: 20 },
-    { header: 'RG', key: 'RG', width: 8 },
-    { header: 'qm', key: 'qm', width: 10 },
+    { header: 'RG', key: 'Reinigungsgruppe', width: 8 }, // Changed from RG to Reinigungsgruppe to match the database field
+    { header: 'qm', key: 'Menge', width: 10 }, // Changed from qm to Menge to match the database field
     { header: 'Anzahl', key: 'Anzahl', width: 8 },
-    { header: 'Intervall', key: 'Intervall', width: 12 },
-    { header: 'Rg/Jahr', key: 'RgJahr', width: 10 },
-    { header: 'Rg/Monat', key: 'RgMonat', width: 10 },
-    { header: 'qm/Monat', key: 'qmMonat', width: 10 },
-    { header: '€/Monat', key: 'WertMonat', width: 12 },
-    { header: 'h/Tag', key: 'StundenTag', width: 10 },
-    { header: 'h/Monat', key: 'StundenMonat', width: 10 },
-    { header: '€/Jahr', key: 'WertJahr', width: 12 },
-    { header: 'qm/h', key: 'qmStunde', width: 10 },
-    { header: 'Reinigungstage', key: 'Reinigungstage', width: 15 },
+    { header: 'Intervall', key: 'Reinigungsintervall', width: 12 }, // Changed from Intervall to Reinigungsintervall
+    { header: 'Rg/Jahr', key: 'ReinigungstageJahr', width: 10 }, // Changed from RgJahr to ReinigungstageJahr
+    { header: 'Rg/Monat', key: 'ReinigungstageMonat', width: 10 }, // Changed from RgMonat to ReinigungstageMonat
+    { header: 'qm/Monat', key: 'MengeAktivMonat', width: 10 }, // Changed from qmMonat to MengeAktivMonat
+    { header: '€/Monat', key: 'VkWertNettoMonat', width: 12 }, // Changed from WertMonat to VkWertNettoMonat
+    { header: 'h/Tag', key: 'StundeTag', width: 10 }, // Changed from StundenTag to StundeTag
+    { header: 'h/Monat', key: 'StundeMonat', width: 10 }, // Changed from StundenMonat to StundeMonat
+    { header: '€/Jahr', key: 'VkWertNettoMonat', width: 12 }, // Calculate this as VkWertNettoMonat*12
+    { header: 'qm/h', key: 'LeistungStunde', width: 10 }, // Changed from qmStunde to LeistungStunde
+    { header: 'Reinigungstage', key: 'ReinigungsTage', width: 15 },
     { header: 'Bemerkung', key: 'Bemerkung', width: 25 },
     { header: 'Reduzierung', key: 'Reduzierung', width: 15 },
   ];
@@ -103,19 +103,19 @@ export async function generateExcel(
       Gebaeudeteil: item.Gebaeudeteil,
       Etage: item.Etage,
       Bezeichnung: item.Bezeichnung,
-      RG: item.RG,
-      qm: safeNumber(item.qm),
+      Reinigungsgruppe: item.Reinigungsgruppe,
+      Menge: safeNumber(item.Menge),
       Anzahl: safeNumber(item.Anzahl),
-      Intervall: item.Intervall,
-      RgJahr: safeNumber(item.RgJahr),
-      RgMonat: safeNumber(item.RgMonat),
-      qmMonat: safeNumber(item.qmMonat),
-      WertMonat: safeNumber(item.WertMonat),
-      StundenTag: safeNumber(item.StundenTag),
-      StundenMonat: safeNumber(item.StundenMonat),
-      WertJahr: safeNumber(item.WertJahr),
-      qmStunde: safeNumber(item.qmStunde),
-      Reinigungstage: item.Reinigungstage,
+      Reinigungsintervall: item.Reinigungsintervall,
+      ReinigungstageJahr: safeNumber(item.ReinigungstageJahr),
+      ReinigungstageMonat: safeNumber(item.ReinigungstageMonat),
+      MengeAktivMonat: safeNumber(item.MengeAktivMonat),
+      VkWertNettoMonat: safeNumber(item.VkWertNettoMonat),
+      StundeTag: safeNumber(item.StundeTag),
+      StundeMonat: safeNumber(item.StundeMonat),
+      'VkWertNettoMonat*12': safeNumber(item.VkWertNettoMonat) * 12, // Calculate yearly value
+      LeistungStunde: safeNumber(item.LeistungStunde),
+      ReinigungsTage: item.ReinigungsTage,
       Bemerkung: item.Bemerkung,
       Reduzierung: item.Reduzierung,
     });
@@ -151,27 +151,30 @@ export async function generateExcel(
       Gebaeudeteil: '',
       Etage: '',
       Bezeichnung: 'Summe:',
-      RG: '',
-      qm: summary ? summary.totalQm : data.reduce((sum, item) => sum + safeNumber(item.qm), 0),
+      Reinigungsgruppe: '',
+      Menge: summary
+        ? summary.totalMenge
+        : data.reduce((sum, item) => sum + safeNumber(item.Menge), 0),
       Anzahl: '',
-      Intervall: '',
-      RgJahr: '',
-      RgMonat: '',
-      qmMonat: summary
-        ? summary.totalQmMonat
-        : data.reduce((sum, item) => sum + safeNumber(item.qmMonat), 0),
-      WertMonat: summary
-        ? summary.totalWertMonat
-        : data.reduce((sum, item) => sum + safeNumber(item.WertMonat), 0),
-      StundenTag: '',
-      StundenMonat: summary
+      Reinigungsintervall: '',
+      ReinigungstageJahr: '',
+      ReinigungstageMonat: '',
+      MengeAktivMonat: summary
+        ? summary.totalMengeAktivMonat
+        : data.reduce((sum, item) => sum + safeNumber(item.MengeAktivMonat), 0),
+      VkWertNettoMonat: summary
+        ? summary.totalVkWertNettoMonat
+        : data.reduce((sum, item) => sum + safeNumber(item.VkWertNettoMonat), 0),
+      StundeTag: '',
+      StundeMonat: summary
         ? summary.totalStundenMonat
-        : data.reduce((sum, item) => sum + safeNumber(item.StundenMonat), 0),
-      WertJahr: summary
-        ? summary.totalWertJahr
-        : data.reduce((sum, item) => sum + safeNumber(item.WertJahr), 0),
-      qmStunde: '',
-      Reinigungstage: '',
+        : data.reduce((sum, item) => sum + safeNumber(item.StundeMonat), 0),
+      'VkWertNettoMonat*12':
+        (summary
+          ? summary.totalVkWertNettoMonat
+          : data.reduce((sum, item) => sum + safeNumber(item.VkWertNettoMonat), 0)) * 12,
+      LeistungStunde: '',
+      ReinigungsTage: '',
       Bemerkung: '',
       Reduzierung: '',
     });
@@ -220,9 +223,9 @@ export async function generateExcel(
     // Daten
     const summaryData = [
       { metric: 'Anzahl Räume', value: summary.totalRooms, unit: '' },
-      { metric: 'Gesamtfläche', value: summary.totalQm, unit: 'm²' },
-      { metric: 'Monatlicher Wert', value: summary.totalWertMonat, unit: '€' },
-      { metric: 'Jährlicher Wert', value: summary.totalWertJahr, unit: '€' },
+      { metric: 'Gesamtfläche', value: summary.totalMenge, unit: 'm²' },
+      { metric: 'Monatlicher Wert', value: summary.totalVkWertNettoMonat, unit: '€' },
+      { metric: 'Jährlicher Wert', value: summary.totalVkWertNettoMonat * 12, unit: '€' },
       { metric: 'Monatliche Arbeitsstunden', value: summary.totalStundenMonat, unit: 'h' },
     ];
 
@@ -252,9 +255,9 @@ export async function generateExcel(
 
       bereichSheet.columns = [
         { header: 'Bereich', key: 'bereich', width: 20 },
-        { header: 'Fläche (qm)', key: 'qm', width: 15 },
-        { header: 'Wert/Monat (€)', key: 'wertMonat', width: 15 },
-        { header: 'Wert/Jahr (€)', key: 'wertJahr', width: 15 },
+        { header: 'Fläche (qm)', key: 'menge', width: 15 }, // Changed from qm to menge
+        { header: 'Wert/Monat (€)', key: 'vkWertNettoMonat', width: 15 }, // Changed from wertMonat to vkWertNettoMonat
+        { header: 'Wert/Jahr (€)', key: 'vkWertNettoMonat*12', width: 15 }, // Changed calculation
         { header: 'Stunden/Monat', key: 'stundenMonat', width: 15 },
       ];
 
@@ -264,8 +267,13 @@ export async function generateExcel(
         Object.assign(cell, headerStyle);
       });
 
-      // Daten hinzufügen
-      summary.bereichStats.forEach(item => {
+      // Daten hinzufügen und Jahreswert berechnen
+      const bereichData = summary.bereichStats.map(item => ({
+        ...item,
+        'vkWertNettoMonat*12': item.vkWertNettoMonat * 12,
+      }));
+
+      bereichData.forEach(item => {
         bereichSheet.addRow(item);
       });
 
@@ -273,10 +281,10 @@ export async function generateExcel(
       bereichSheet.eachRow((row, rowNumber) => {
         if (rowNumber > 1) {
           // Format je nach Spaltentyp
-          row.getCell(2).numFmt = numberFormat; // qm
-          row.getCell(3).numFmt = currencyFormat; // WertMonat
-          row.getCell(4).numFmt = currencyFormat; // WertJahr
-          row.getCell(5).numFmt = numberFormat; // StundenMonat
+          row.getCell(2).numFmt = numberFormat; // menge
+          row.getCell(3).numFmt = currencyFormat; // vkWertNettoMonat
+          row.getCell(4).numFmt = currencyFormat; // vkWertNettoMonat*12
+          row.getCell(5).numFmt = numberFormat; // stundenMonat
         }
       });
     }
@@ -286,10 +294,10 @@ export async function generateExcel(
       const rgSheet = workbook.addWorksheet('Nach Reinigungsgruppe');
 
       rgSheet.columns = [
-        { header: 'Reinigungsgruppe', key: 'rg', width: 20 },
-        { header: 'Fläche (qm)', key: 'qm', width: 15 },
-        { header: 'Wert/Monat (€)', key: 'wertMonat', width: 15 },
-        { header: 'Wert/Jahr (€)', key: 'wertJahr', width: 15 },
+        { header: 'Reinigungsgruppe', key: 'reinigungsgruppe', width: 20 }, // Changed from rg to reinigungsgruppe
+        { header: 'Fläche (qm)', key: 'menge', width: 15 }, // Changed from qm to menge
+        { header: 'Wert/Monat (€)', key: 'vkWertNettoMonat', width: 15 }, // Changed from wertMonat to vkWertNettoMonat
+        { header: 'Wert/Jahr (€)', key: 'vkWertNettoMonat*12', width: 15 }, // Changed calculation
         { header: 'Stunden/Monat', key: 'stundenMonat', width: 15 },
       ];
 
@@ -299,8 +307,13 @@ export async function generateExcel(
         Object.assign(cell, headerStyle);
       });
 
-      // Daten hinzufügen
-      summary.rgStats.forEach(item => {
+      // Daten hinzufügen und Jahreswert berechnen
+      const rgData = summary.rgStats.map(item => ({
+        ...item,
+        'vkWertNettoMonat*12': item.vkWertNettoMonat * 12,
+      }));
+
+      rgData.forEach(item => {
         rgSheet.addRow(item);
       });
 
@@ -308,10 +321,10 @@ export async function generateExcel(
       rgSheet.eachRow((row, rowNumber) => {
         if (rowNumber > 1) {
           // Format je nach Spaltentyp
-          row.getCell(2).numFmt = numberFormat; // qm
-          row.getCell(3).numFmt = currencyFormat; // WertMonat
-          row.getCell(4).numFmt = currencyFormat; // WertJahr
-          row.getCell(5).numFmt = numberFormat; // StundenMonat
+          row.getCell(2).numFmt = numberFormat; // menge
+          row.getCell(3).numFmt = currencyFormat; // vkWertNettoMonat
+          row.getCell(4).numFmt = currencyFormat; // vkWertNettoMonat*12
+          row.getCell(5).numFmt = numberFormat; // stundenMonat
         }
       });
     }

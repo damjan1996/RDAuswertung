@@ -35,10 +35,12 @@ export function calculateSummary(data: RaumbuchEntry[]): RaumbuchSummary {
   if (!data || data.length === 0) {
     return {
       totalRooms: 0,
-      totalQm: 0,
-      totalQmMonat: 0,
-      totalWertMonat: 0,
-      totalWertJahr: 0,
+      totalMenge: 0,
+      totalMengeAktivMonat: 0,
+      totalVkWertNettoMonat: 0,
+      totalVkWertBruttoMonat: 0,
+      totalRgWertNettoMonat: 0,
+      totalRgWertBruttoMonat: 0,
       totalStundenMonat: 0,
     };
   }
@@ -46,42 +48,63 @@ export function calculateSummary(data: RaumbuchEntry[]): RaumbuchSummary {
   // Berechnung der Gesamtwerte
   const totalRooms = data.length;
 
-  const totalQm = data.reduce((sum, item) => sum + safeNumber(item.qm), 0);
+  const totalMenge = data.reduce((sum, item) => sum + safeNumber(item.Menge), 0);
 
-  const totalQmMonat = data.reduce((sum, item) => sum + safeNumber(item.qmMonat), 0);
+  const totalMengeAktivMonat = data.reduce(
+    (sum, item) => sum + safeNumber(item.MengeAktivMonat),
+    0
+  );
 
-  const totalWertMonat = data.reduce((sum, item) => sum + safeNumber(item.WertMonat), 0);
+  const totalVkWertNettoMonat = data.reduce(
+    (sum, item) => sum + safeNumber(item.VkWertNettoMonat),
+    0
+  );
 
-  const totalWertJahr = data.reduce((sum, item) => sum + safeNumber(item.WertJahr), 0);
+  const totalVkWertBruttoMonat = data.reduce(
+    (sum, item) => sum + safeNumber(item.VkWertBruttoMonat),
+    0
+  );
 
-  const totalStundenMonat = data.reduce((sum, item) => sum + safeNumber(item.StundenMonat), 0);
+  const totalRgWertNettoMonat = data.reduce(
+    (sum, item) => sum + safeNumber(item.RgWertNettoMonat),
+    0
+  );
+
+  const totalRgWertBruttoMonat = data.reduce(
+    (sum, item) => sum + safeNumber(item.RgWertBruttoMonat),
+    0
+  );
+
+  const totalStundenMonat = data.reduce((sum, item) => sum + safeNumber(item.StundeMonat), 0);
 
   // Statistiken nach Bereichen
   const groupedByBereich = groupBy(data, 'Bereich');
   const bereichStats = Object.entries(groupedByBereich).map(([bereich, items]) => ({
     bereich: bereich,
-    qm: items.reduce((sum, item) => sum + safeNumber(item.qm), 0),
-    wertMonat: items.reduce((sum, item) => sum + safeNumber(item.WertMonat), 0),
-    wertJahr: items.reduce((sum, item) => sum + safeNumber(item.WertJahr), 0),
-    stundenMonat: items.reduce((sum, item) => sum + safeNumber(item.StundenMonat), 0),
+    menge: items.reduce((sum, item) => sum + safeNumber(item.Menge), 0),
+    vkWertNettoMonat: items.reduce((sum, item) => sum + safeNumber(item.VkWertNettoMonat), 0),
+    vkWertBruttoMonat: items.reduce((sum, item) => sum + safeNumber(item.VkWertBruttoMonat), 0),
+    stundenMonat: items.reduce((sum, item) => sum + safeNumber(item.StundeMonat), 0),
   }));
 
   // Statistiken nach Reinigungsgruppen
-  const groupedByRG = groupBy(data, 'RG');
-  const rgStats = Object.entries(groupedByRG).map(([rg, items]) => ({
-    rg: rg,
-    qm: items.reduce((sum, item) => sum + safeNumber(item.qm), 0),
-    wertMonat: items.reduce((sum, item) => sum + safeNumber(item.WertMonat), 0),
-    wertJahr: items.reduce((sum, item) => sum + safeNumber(item.WertJahr), 0),
-    stundenMonat: items.reduce((sum, item) => sum + safeNumber(item.StundenMonat), 0),
+  const groupedByRG = groupBy(data, 'Reinigungsgruppe');
+  const rgStats = Object.entries(groupedByRG).map(([reinigungsgruppe, items]) => ({
+    reinigungsgruppe: reinigungsgruppe,
+    menge: items.reduce((sum, item) => sum + safeNumber(item.Menge), 0),
+    vkWertNettoMonat: items.reduce((sum, item) => sum + safeNumber(item.VkWertNettoMonat), 0),
+    vkWertBruttoMonat: items.reduce((sum, item) => sum + safeNumber(item.VkWertBruttoMonat), 0),
+    stundenMonat: items.reduce((sum, item) => sum + safeNumber(item.StundeMonat), 0),
   }));
 
   return {
     totalRooms,
-    totalQm,
-    totalQmMonat,
-    totalWertMonat,
-    totalWertJahr,
+    totalMenge,
+    totalMengeAktivMonat,
+    totalVkWertNettoMonat,
+    totalVkWertBruttoMonat,
+    totalRgWertNettoMonat,
+    totalRgWertBruttoMonat,
     totalStundenMonat,
     bereichStats,
     rgStats,
@@ -89,31 +112,44 @@ export function calculateSummary(data: RaumbuchEntry[]): RaumbuchSummary {
 }
 
 /**
- * Berechnet die Top-N-Werte aus den Statistiken
+ * Gibt die Top-N Elemente nach einem bestimmten Feld zurück
  *
- * @param stats - Statistiken (Bereich oder RG)
- * @param field - Zu vergleichendes Feld
- * @param count - Anzahl der zu liefernden Einträge
- * @param ascending - Ob aufsteigend (true) oder absteigend (false) sortiert werden soll
- * @returns Sortierte und begrenzte Statistiken
+ * @param data - Array von Objekten
+ * @param field - Feld, nach dem sortiert werden soll
+ * @param limit - Anzahl der zurückzugebenden Elemente (default: 5)
+ * @param ascending - Wenn true, wird aufsteigend sortiert (default: false, also absteigend)
+ * @returns Sortiertes und begrenztes Array
  */
-export function getTopStats(
-  stats: Array<Record<string, unknown>>,
-  field: string = 'qm',
-  count: number = 5,
+export function getTopStats<T extends Record<string, unknown>>(
+  data: T[],
+  field: keyof T,
+  limit: number = 5,
   ascending: boolean = false
-): Array<Record<string, unknown>> {
-  if (!stats || stats.length === 0) {
+): T[] {
+  if (!data || data.length === 0) {
     return [];
   }
 
-  // Sortieren nach dem angegebenen Feld
-  const sortedStats = [...stats].sort((a, b) => {
-    const aValue = safeNumber(a[field]);
-    const bValue = safeNumber(b[field]);
-    return ascending ? aValue - bValue : bValue - aValue;
+  // Sortiere die Daten nach dem angegebenen Feld
+  const sortedData = [...data].sort((a, b) => {
+    const aValue = a[field];
+    const bValue = b[field];
+
+    // Behandle null oder undefined Werte
+    if (aValue === null || aValue === undefined) return ascending ? -1 : 1;
+    if (bValue === null || bValue === undefined) return ascending ? 1 : -1;
+
+    // Vergleiche numerische Werte
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return ascending ? aValue - bValue : bValue - aValue;
+    }
+
+    // Vergleiche String-Werte
+    const aString = String(aValue).toLowerCase();
+    const bString = String(bValue).toLowerCase();
+    return ascending ? aString.localeCompare(bString) : bString.localeCompare(aString);
   });
 
-  // Begrenzen auf die angegebene Anzahl
-  return sortedStats.slice(0, count);
+  // Beschränke auf die angegebene Anzahl
+  return sortedData.slice(0, limit);
 }

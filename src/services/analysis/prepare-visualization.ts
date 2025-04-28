@@ -1,150 +1,126 @@
 /**
- * Service zur Aufbereitung von Raumbuch-Daten für Visualisierungen
+ * Service zur Vorbereitung von Visualisierungsdaten
  */
 
+import { toNumber } from '@/lib/formatters';
 import { groupBy } from '@/lib/utils';
 
 import type { RaumbuchRow, VisualizationData } from '@/types/raumbuch.types';
 
-// Verwende RaumbuchRow als RaumbuchEntry
+// Alias-Typ
 type RaumbuchEntry = RaumbuchRow;
 
 /**
- * Schützt die Berechnung gegen NULL-Werte und ungültige Zahlen
+ * Bereitet Daten für Visualisierungen vor
  *
- * @param value - Der zu verarbeitende Wert
- * @param defaultValue - Standardwert, wenn der Wert ungültig ist
- * @returns Eine gültige Zahl oder den Standardwert
- */
-function safeNumber(value: unknown, defaultValue: number = 0): number {
-  if (value === null || value === undefined) {
-    return defaultValue;
-  }
-
-  const parsed = typeof value === 'number' ? value : parseFloat(String(value));
-  return isNaN(parsed) ? defaultValue : parsed;
-}
-
-/**
- * Bereitet Daten für Visualisierungen auf
- *
- * @param data - Liste der Raumbuch-Einträge
- * @returns Aufbereitete Daten für verschiedene Visualisierungen
+ * @param data - Raumbuch-Einträge
+ * @returns Vorbereitete Daten für verschiedene Visualisierungen
  */
 export function prepareDataForVisualization(data: RaumbuchEntry[]): VisualizationData {
   if (!data || data.length === 0) {
-    return {
-      bereichData: {},
-      rgData: {},
-      etageData: {},
-    };
+    return {};
   }
 
-  try {
-    // Daten für Kreisdiagramm nach Bereichen
-    const bereichData = prepareBereichData(data);
+  // Gruppiert nach Bereich
+  const bereichData = getBereichData(data);
 
-    // Daten für Balkendiagramm nach Reinigungsgruppen
-    const rgData = prepareRgData(data);
+  // Gruppiert nach Reinigungsgruppe
+  const rgData = getRgData(data);
 
-    // Daten für Balkendiagramm nach Etagen
-    const etageData = prepareEtageData(data);
+  // Gruppiert nach Etage
+  const etageData = getEtageData(data);
 
-    return {
-      bereichData,
-      rgData,
-      etageData,
-    };
-  } catch (error) {
-    console.error('Fehler bei der Datenvorbereitung für Visualisierung:', error);
-    return {
-      bereichData: {},
-      rgData: {},
-      etageData: {},
-    };
-  }
+  return {
+    bereichData,
+    rgData,
+    etageData,
+  };
 }
 
 /**
- * Bereitet Daten für Bereich-Visualisierung auf
+ * Erzeugt Daten für Bereich-Visualisierung
  *
- * @param data - Liste der Raumbuch-Einträge
- * @returns Aufbereitete Daten für Bereich-Visualisierung
+ * @param data - Raumbuch-Einträge
+ * @returns Record mit Bereich als Key und Wert als Value
  */
-function prepareBereichData(data: RaumbuchEntry[]): Record<string, number> {
+function getBereichData(data: RaumbuchEntry[]): Record<string, number> {
   const groupedByBereich = groupBy(data, 'Bereich');
 
-  // Summiere qm pro Bereich
-  const result: Record<string, number> = {};
-
+  // Summe der Menge pro Bereich
+  const bereichData: Record<string, number> = {};
   Object.entries(groupedByBereich).forEach(([bereich, items]) => {
-    if (bereich && bereich !== 'undefined' && bereich !== 'null') {
-      result[bereich] = items.reduce((sum, item) => sum + safeNumber(item.qm), 0);
-    }
+    if (!bereich) return; // Überspringe leere Bereiche
+
+    const sum = items.reduce((acc, item) => acc + toNumber(item.Menge), 0);
+    bereichData[bereich] = Number(sum.toFixed(2));
   });
 
-  return result;
+  return bereichData;
 }
 
 /**
- * Bereitet Daten für Reinigungsgruppen-Visualisierung auf
+ * Erzeugt Daten für Reinigungsgruppe-Visualisierung
  *
- * @param data - Liste der Raumbuch-Einträge
- * @returns Aufbereitete Daten für Reinigungsgruppen-Visualisierung
+ * @param data - Raumbuch-Einträge
+ * @returns Record mit Reinigungsgruppe als Key und Wert als Value
  */
-function prepareRgData(data: RaumbuchEntry[]): Record<string, number> {
-  const groupedByRG = groupBy(data, 'RG');
+function getRgData(data: RaumbuchEntry[]): Record<string, number> {
+  const groupedByRg = groupBy(data, 'Reinigungsgruppe');
 
-  // Summiere WertMonat pro Reinigungsgruppe
-  const result: Record<string, number> = {};
+  // Summe der Verkaufswerte pro Reinigungsgruppe
+  const rgData: Record<string, number> = {};
+  Object.entries(groupedByRg).forEach(([rg, items]) => {
+    if (!rg) return; // Überspringe leere Reinigungsgruppen
 
-  Object.entries(groupedByRG).forEach(([rg, items]) => {
-    if (rg && rg !== 'undefined' && rg !== 'null') {
-      result[rg] = items.reduce((sum, item) => sum + safeNumber(item.WertMonat), 0);
-    }
+    const sum = items.reduce((acc, item) => acc + toNumber(item.VkWertNettoMonat), 0);
+    rgData[rg] = Number(sum.toFixed(2));
   });
 
-  return result;
+  return rgData;
 }
 
 /**
- * Bereitet Daten für Etagen-Visualisierung auf
+ * Erzeugt Daten für Etage-Visualisierung
  *
- * @param data - Liste der Raumbuch-Einträge
- * @returns Aufbereitete Daten für Etagen-Visualisierung
+ * @param data - Raumbuch-Einträge
+ * @returns Record mit Etage als Key und Wert als Value
  */
-function prepareEtageData(data: RaumbuchEntry[]): Record<string, number> {
+function getEtageData(data: RaumbuchEntry[]): Record<string, number> {
   const groupedByEtage = groupBy(data, 'Etage');
 
-  // Summiere StundenMonat pro Etage
-  const result: Record<string, number> = {};
-
+  // Summe der Stunden pro Etage
+  const etageData: Record<string, number> = {};
   Object.entries(groupedByEtage).forEach(([etage, items]) => {
-    if (etage && etage !== 'undefined' && etage !== 'null') {
-      result[etage] = items.reduce((sum, item) => sum + safeNumber(item.StundenMonat), 0);
-    }
+    if (!etage) return; // Überspringe leere Etagen
+
+    const sum = items.reduce((acc, item) => acc + toNumber(item.StundeMonat), 0);
+    etageData[etage] = Number(sum.toFixed(2));
   });
 
-  return result;
+  return etageData;
 }
 
 /**
- * Bereitet Daten für Gebäudeteil-Visualisierung auf
+ * Bereitet die Gebäudeteil-Daten für Visualisierung auf
  *
  * @param data - Liste der Raumbuch-Einträge
- * @returns Aufbereitete Daten für Gebäudeteil-Visualisierung
+ * @returns Vorbereitete Daten für Gebäudeteil-Visualisierung
  */
-export function prepareGebaeudeTeilData(data: RaumbuchEntry[]): Record<string, number> {
+export function prepareGebaeudeteilData(data: RaumbuchEntry[]): Record<string, number> {
+  if (!data || data.length === 0) {
+    return {};
+  }
+
   const groupedByGebaeudeteil = groupBy(data, 'Gebaeudeteil');
 
-  // Summiere qm pro Gebäudeteil
-  const result: Record<string, number> = {};
-
+  // Gebäudeteil-Daten (für Flächenaufteilung)
+  const gebaeudeteilData: Record<string, number> = {};
   Object.entries(groupedByGebaeudeteil).forEach(([gebaeudeteil, items]) => {
-    if (gebaeudeteil && gebaeudeteil !== 'undefined' && gebaeudeteil !== 'null') {
-      result[gebaeudeteil] = items.reduce((sum, item) => sum + safeNumber(item.qm), 0);
-    }
+    if (!gebaeudeteil) return; // Überspringe leere Gebäudeteile
+
+    const sum = items.reduce((acc, item) => acc + toNumber(item.Menge), 0);
+    gebaeudeteilData[gebaeudeteil] = Number(sum.toFixed(2));
   });
 
-  return result;
+  return gebaeudeteilData;
 }

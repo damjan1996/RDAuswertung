@@ -1,15 +1,28 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
+import { Home, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/contexts/auth-context';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -27,115 +40,200 @@ export default function Header() {
   const navItems = [{ href: '/dashboard', label: 'Dashboard' }];
 
   return (
-    <header className="bg-primary-800 text-white shadow-md">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
-          {/* Logo/App Title */}
-          <div className="flex items-center">
-            <Link href="/dashboard" className="text-xl font-bold flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-              </svg>
-              <span className="hidden sm:inline">Ritter Digital</span>
-              <span className="sm:hidden">RD</span>
-            </Link>
-          </div>
+    <>
+      {/* Spacer div to push content below the fixed header */}
+      <div className="h-16"></div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {navItems.map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`hover:text-blue-200 transition-colors ${
-                  pathname === item.href ? 'text-blue-300 font-medium' : ''
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            {isAuthenticated && (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-blue-200">Angemeldet als: {user || 'Benutzer'}</span>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 py-1 bg-primary-700 hover:bg-primary-600 rounded-md text-sm transition-colors"
-                >
-                  Abmelden
-                </button>
-              </div>
-            )}
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-800 focus:ring-white"
-            onClick={toggleMobileMenu}
-            aria-expanded={isMobileMenuOpen}
-          >
-            <span className="sr-only">Menü öffnen</span>
-            <svg
-              className="h-6 w-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-background/95 text-primary shadow-lg backdrop-blur-md'
+            : 'bg-primary text-primary-50'
+        }`}
+      >
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            {/* Logo/App Title */}
+            <motion.div
+              className="flex items-center"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 10 }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d={isMobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-primary-700 border-t border-blue-800">
-          <div className="container mx-auto px-4 py-3">
-            <nav className="flex flex-col space-y-3">
-              {navItems.map(item => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`py-2 px-3 rounded ${
-                    pathname === item.href
-                      ? 'bg-blue-800 text-white'
-                      : 'hover:bg-blue-800 hover:text-white'
-                  }`}
-                  onClick={closeMobileMenu}
+              <Link href="/dashboard" className="text-xl font-bold flex items-center group">
+                <motion.div
+                  whileHover={{ rotate: 10 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                  className="mr-2"
                 >
-                  {item.label}
-                </Link>
+                  <Home
+                    className={`h-6 w-6 ${scrolled ? 'text-secondary' : 'text-primary-200'} group-hover:text-accent transition-colors`}
+                  />
+                </motion.div>
+                <span className="hidden sm:inline relative overflow-hidden">
+                  <span className="inline-block">Ritter Digital</span>
+                  <motion.span
+                    className={`absolute bottom-0 left-0 h-[2px] ${scrolled ? 'bg-accent' : 'bg-accent'}`}
+                    initial={{ width: 0 }}
+                    whileHover={{ width: '100%' }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </span>
+                <span className="sm:hidden">RD</span>
+              </Link>
+            </motion.div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              {navItems.map(item => (
+                <motion.div
+                  key={item.href}
+                  whileHover={{ y: -2 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                >
+                  <Link
+                    href={item.href}
+                    className={`relative px-2 py-1 font-medium transition-colors ${
+                      pathname === item.href
+                        ? scrolled
+                          ? 'text-accent'
+                          : 'text-accent'
+                        : scrolled
+                          ? 'text-primary-800'
+                          : 'text-primary-100'
+                    }`}
+                  >
+                    {item.label}
+                    {pathname === item.href && (
+                      <motion.span
+                        className={`absolute bottom-0 left-0 h-[2px] w-full ${scrolled ? 'bg-accent' : 'bg-accent'}`}
+                        layoutId="underline"
+                      />
+                    )}
+                  </Link>
+                </motion.div>
               ))}
 
               {isAuthenticated && (
-                <>
-                  <div className="py-2 px-3 text-sm text-blue-200">
+                <div className="flex items-center space-x-6">
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className={`text-sm ${scrolled ? 'text-secondary/80' : 'text-primary-200'}`}
+                  >
                     Angemeldet als: {user || 'Benutzer'}
-                  </div>
-                  <button
+                  </motion.span>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleLogout}
-                    className="py-2 px-3 bg-primary-600 hover:bg-primary-500 rounded-md text-left"
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      scrolled
+                        ? 'bg-accent text-white hover:bg-accent-600 hover:shadow-md'
+                        : 'bg-accent text-white hover:bg-accent-400'
+                    }`}
                   >
                     Abmelden
-                  </button>
-                </>
+                  </motion.button>
+                </div>
               )}
             </nav>
+
+            {/* Mobile Menu Button */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className={`md:hidden p-2 rounded-full ${
+                scrolled
+                  ? 'text-primary hover:bg-primary-100'
+                  : 'text-primary-50 hover:bg-primary-700'
+              } transition-colors focus:outline-none`}
+              onClick={toggleMobileMenu}
+              aria-expanded={isMobileMenuOpen}
+            >
+              <span className="sr-only">Menü öffnen</span>
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </motion.button>
           </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className={`md:hidden ${
+                scrolled
+                  ? 'bg-background border-t border-primary-100'
+                  : 'bg-primary-700/95 backdrop-blur-md border-t border-primary-600/30'
+              }`}
+            >
+              <div className="container mx-auto px-6 py-4">
+                <nav className="flex flex-col space-y-3">
+                  {navItems.map(item => (
+                    <motion.div
+                      key={item.href}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Link
+                        href={item.href}
+                        className={`block py-3 px-4 rounded-lg transition-all ${
+                          pathname === item.href
+                            ? scrolled
+                              ? 'bg-primary-100 text-accent font-medium'
+                              : 'bg-primary-600 text-accent font-medium'
+                            : scrolled
+                              ? 'text-primary-800 hover:bg-primary-100'
+                              : 'text-primary-50 hover:bg-primary-600/50'
+                        }`}
+                        onClick={closeMobileMenu}
+                      >
+                        {item.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+
+                  {isAuthenticated && (
+                    <>
+                      <motion.div
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.2, delay: 0.1 }}
+                        className={`py-3 px-4 text-sm ${scrolled ? 'text-secondary/80' : 'text-primary-200'}`}
+                      >
+                        Angemeldet als: {user || 'Benutzer'}
+                      </motion.div>
+                      <motion.div
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.2, delay: 0.2 }}
+                      >
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleLogout}
+                          className={`w-full py-3 px-4 rounded-lg text-left transition-all ${
+                            scrolled
+                              ? 'bg-accent text-white hover:bg-accent-600'
+                              : 'bg-accent text-white hover:bg-accent-400'
+                          }`}
+                        >
+                          Abmelden
+                        </motion.button>
+                      </motion.div>
+                    </>
+                  )}
+                </nav>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
+    </>
   );
 }

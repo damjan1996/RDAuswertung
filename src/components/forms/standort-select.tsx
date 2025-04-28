@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import Select from '@/components/ui/select';
 
@@ -34,13 +34,16 @@ export default function StandortSelect({
   // Sort standorte by bezeichnung
   const sortedStandorte = [...standorte].sort((a, b) => a.bezeichnung.localeCompare(b.bezeichnung));
 
-  // Handle select change
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = parseInt(e.target.value);
-    if (!isNaN(selectedId)) {
-      onChange(selectedId);
-    }
-  };
+  // Handle select change - use useCallback to make it serializable
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const selectedId = parseInt(e.target.value);
+      if (!isNaN(selectedId)) {
+        onChange(selectedId);
+      }
+    },
+    [onChange]
+  );
 
   return (
     <Select

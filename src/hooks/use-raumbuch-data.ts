@@ -12,17 +12,17 @@ interface FilterOptions {
   bereiche?: string[];
   gebaeudeteil?: string[];
   etage?: string[];
-  rg?: string[];
+  reinigungsgruppe?: string[];
 }
 
 /**
- * Hook zum Abrufen und Verarbeiten von Raumbuch-Daten für einen bestimmten Standort
+ * Hook zum Abrufen und Verarbeiten von Raumbuch-Daten für einen bestimmten Standort/Gebäude
  *
- * @param standortId - ID des Standorts
+ * @param gebaeudeId - ID des Gebäudes
  * @param filterQuery - Optionale Filter-Parameter als Query-String
  * @returns Ein Objekt mit Raumbuch-Daten, Zusammenfassung, Visualisierungsdaten und Filteroptionen
  */
-export function useRaumbuchData(standortId: number, filterQuery?: string) {
+export function useRaumbuchData(gebaeudeId: number, filterQuery?: string) {
   const [data, setData] = useState<RaumbuchEntry[]>([]);
   const [summary, setSummary] = useState<RaumbuchSummary | null>(null);
   const [visualizationData, setVisualizationData] = useState<VisualizationData | null>(null);
@@ -30,14 +30,14 @@ export function useRaumbuchData(standortId: number, filterQuery?: string) {
     bereiche: [],
     gebaeudeteil: [],
     etage: [],
-    rg: [],
+    reinigungsgruppe: [],
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Abbruch wenn keine standortId
-    if (!standortId) {
+    // Abbruch wenn keine gebaeudeId
+    if (!gebaeudeId) {
       setIsLoading(false);
       return;
     }
@@ -49,7 +49,7 @@ export function useRaumbuchData(standortId: number, filterQuery?: string) {
       try {
         // Query-Parameter zusammenbauen
         const queryParams = filterQuery ? `?${filterQuery}` : '';
-        const response = await fetch(`/api/raumbuch/${standortId}${queryParams}`);
+        const response = await fetch(`/api/raumbuch/${gebaeudeId}${queryParams}`);
 
         if (!response.ok) {
           throw new Error(
@@ -68,7 +68,7 @@ export function useRaumbuchData(standortId: number, filterQuery?: string) {
             bereiche: [],
             gebaeudeteil: [],
             etage: [],
-            rg: [],
+            reinigungsgruppe: [],
           }
         );
       } catch (err) {
@@ -80,7 +80,7 @@ export function useRaumbuchData(standortId: number, filterQuery?: string) {
     }
 
     fetchData();
-  }, [standortId, filterQuery]);
+  }, [gebaeudeId, filterQuery]);
 
   return {
     data,

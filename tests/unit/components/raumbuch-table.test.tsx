@@ -10,84 +10,155 @@ describe('RaumbuchTable Component', () => {
   const mockData: RaumbuchRow[] = [
     {
       ID: 1,
+      Firma_ID: 1,
+      Standort_ID: 1,
+      Gebaeude_ID: 1,
+      Standort: 'Standort 1',
+      Gebaeude: 'Gebäude 1',
       Raumnummer: '101',
       Bereich: 'Büro',
       Gebaeudeteil: 'Hauptgebäude',
       Etage: 'EG',
       Bezeichnung: 'Büro 1',
-      RG: 'RG1',
-      qm: 25,
+      Reinigungsgruppe: 'RG1',
+      Menge: 25,
+      MengeAktiv: 25,
+      MengeInAktiv: 0,
+      Einheit: 'm²',
       Anzahl: 5,
-      Intervall: 'Täglich',
-      RgJahr: 250,
-      RgMonat: 20.83,
-      qmMonat: 520.75,
-      WertMonat: 150,
-      StundenTag: 0.5,
-      StundenMonat: 10.42,
-      WertJahr: 1800,
-      qmStunde: 50,
-      Reinigungstage: '',
-      Bemerkung: '',
+      Reinigungsintervall: 'Täglich',
+      ReinigungstageJahr: 250,
+      ReinigungstageMonat: 20.83,
+      MengeAktivMonat: 520.75,
+      VkWertNettoMonat: 150,
+      VkWertBruttoMonat: 178.5,
+      RgWertNettoMonat: 135,
+      RgWertBruttoMonat: 160.65,
+      StundeTag: 0.5,
+      StundeMonat: 10.42,
+      LeistungStunde: 50,
+      LeistungStundeIst: 50,
+      Aufschlag: 0,
+      ReinigungsTage: '',
       Reduzierung: '',
-      Standort_ID: 1,
+      Bemerkung: '',
+      Bereich_ID: 1,
+      Gebaeudeteil_ID: 1,
+      Etage_ID: 1,
+      Reinigungsgruppe_ID: 1,
+      Einheit_ID: 1,
+      Reinigungsintervall_ID: 1,
+      ReinigungsTage_ID: null,
+      LfdNr: null,
+      xStatus: null,
+      xDatum: null,
+      xBenutzer: null,
+      xVersion: null,
     },
     {
       ID: 2,
+      Firma_ID: 1,
+      Standort_ID: 1,
+      Gebaeude_ID: 1,
+      Standort: 'Standort 1',
+      Gebaeude: 'Gebäude 1',
       Raumnummer: '102',
       Bereich: 'Konferenz',
       Gebaeudeteil: 'Hauptgebäude',
       Etage: 'EG',
       Bezeichnung: 'Konferenzraum',
-      RG: 'RG2',
-      qm: 40,
+      Reinigungsgruppe: 'RG2',
+      Menge: 40,
+      MengeAktiv: 40,
+      MengeInAktiv: 0,
+      Einheit: 'm²',
       Anzahl: 5,
-      Intervall: 'Täglich',
-      RgJahr: 250,
-      RgMonat: 20.83,
-      qmMonat: 833.2,
-      WertMonat: 250,
-      StundenTag: 0.8,
-      StundenMonat: 16.67,
-      WertJahr: 3000,
-      qmStunde: 50,
-      Reinigungstage: '',
-      Bemerkung: '',
+      Reinigungsintervall: 'Täglich',
+      ReinigungstageJahr: 250,
+      ReinigungstageMonat: 20.83,
+      MengeAktivMonat: 833.2,
+      VkWertNettoMonat: 250,
+      VkWertBruttoMonat: 297.5,
+      RgWertNettoMonat: 225,
+      RgWertBruttoMonat: 267.75,
+      StundeTag: 0.8,
+      StundeMonat: 16.67,
+      LeistungStunde: 50,
+      LeistungStundeIst: 50,
+      Aufschlag: 0,
+      ReinigungsTage: '',
       Reduzierung: '',
-      Standort_ID: 1,
+      Bemerkung: '',
+      Bereich_ID: 2,
+      Gebaeudeteil_ID: 1,
+      Etage_ID: 1,
+      Reinigungsgruppe_ID: 2,
+      Einheit_ID: 1,
+      Reinigungsintervall_ID: 1,
+      ReinigungsTage_ID: null,
+      LfdNr: null,
+      xStatus: null,
+      xDatum: null,
+      xBenutzer: null,
+      xVersion: null,
     },
     {
       ID: 3,
+      Firma_ID: 1,
+      Standort_ID: 1,
+      Gebaeude_ID: 1,
+      Standort: 'Standort 1',
+      Gebaeude: 'Gebäude 1',
       Raumnummer: '201',
       Bereich: 'Büro',
       Gebaeudeteil: 'Nebengebäude',
       Etage: '1.OG',
       Bezeichnung: 'Büro 2',
-      RG: 'RG1',
-      qm: 20,
+      Reinigungsgruppe: 'RG1',
+      Menge: 20,
+      MengeAktiv: 20,
+      MengeInAktiv: 0,
+      Einheit: 'm²',
       Anzahl: 5,
-      Intervall: 'Täglich',
-      RgJahr: 250,
-      RgMonat: 20.83,
-      qmMonat: 416.6,
-      WertMonat: 120,
-      StundenTag: 0.4,
-      StundenMonat: 8.33,
-      WertJahr: 1440,
-      qmStunde: 50,
-      Reinigungstage: '',
-      Bemerkung: '',
+      Reinigungsintervall: 'Täglich',
+      ReinigungstageJahr: 250,
+      ReinigungstageMonat: 20.83,
+      MengeAktivMonat: 416.6,
+      VkWertNettoMonat: 120,
+      VkWertBruttoMonat: 142.8,
+      RgWertNettoMonat: 108,
+      RgWertBruttoMonat: 128.52,
+      StundeTag: 0.4,
+      StundeMonat: 8.33,
+      LeistungStunde: 50,
+      LeistungStundeIst: 50,
+      Aufschlag: 0,
+      ReinigungsTage: '',
       Reduzierung: '',
-      Standort_ID: 1,
+      Bemerkung: '',
+      Bereich_ID: 1,
+      Gebaeudeteil_ID: 2,
+      Etage_ID: 2,
+      Reinigungsgruppe_ID: 1,
+      Einheit_ID: 1,
+      Reinigungsintervall_ID: 1,
+      ReinigungsTage_ID: null,
+      LfdNr: null,
+      xStatus: null,
+      xDatum: null,
+      xBenutzer: null,
+      xVersion: null,
     },
   ];
 
   const mockSummary: RaumbuchSummary = {
     totalRooms: 3,
-    totalQm: 85,
-    totalQmMonat: 1770.55,
-    totalWertMonat: 520,
-    totalWertJahr: 6240,
+    totalMenge: 85,
+    totalMengeAktivMonat: 1770.55,
+    totalVkWertNettoMonat: 520,
+    totalVkWertBruttoMonat: 618.8,
+    totalRgWertNettoMonat: 468,
+    totalRgWertBruttoMonat: 556.92,
     totalStundenMonat: 35.42,
   };
 
@@ -175,14 +246,11 @@ describe('RaumbuchTable Component', () => {
     // Prüfe die formatierten Werte in der Zusammenfassungszeile
     const cells = within(summaryRow).getAllByRole('cell');
 
-    // qm-Wert (formatiert auf 2 Dezimalstellen)
+    // Menge-Wert (formatiert auf 2 Dezimalstellen)
     expect(cells[6]).toHaveTextContent('85.00');
 
-    // WertMonat (formatiert auf 2 Dezimalstellen)
-    expect(cells[12]).toHaveTextContent('520.00');
-
-    // WertJahr (formatiert auf 2 Dezimalstellen)
-    expect(cells[15]).toHaveTextContent('6240.00');
+    // VkWertNettoMonat (formatiert auf 2 Dezimalstellen)
+    expect(cells[13]).toHaveTextContent('520.00');
   });
 
   test('Zeigt eine Nachricht an, wenn keine Daten vorhanden sind', () => {
@@ -192,10 +260,12 @@ describe('RaumbuchTable Component', () => {
         summary={{
           ...mockSummary,
           totalRooms: 0,
-          totalQm: 0,
-          totalQmMonat: 0,
-          totalWertMonat: 0,
-          totalWertJahr: 0,
+          totalMenge: 0,
+          totalMengeAktivMonat: 0,
+          totalVkWertNettoMonat: 0,
+          totalVkWertBruttoMonat: 0,
+          totalRgWertNettoMonat: 0,
+          totalRgWertBruttoMonat: 0,
           totalStundenMonat: 0,
         }}
       />
@@ -210,13 +280,13 @@ describe('RaumbuchTable Component', () => {
 
     // Prüfe, ob die numerischen Werte korrekt formatiert sind
 
-    // qm (auf 2 Dezimalstellen)
+    // Menge (auf 2 Dezimalstellen)
     expect(screen.getByText('25.00')).toBeInTheDocument();
 
-    // WertMonat (auf 2 Dezimalstellen)
+    // VkWertNettoMonat (auf 2 Dezimalstellen)
     expect(screen.getByText('150.00')).toBeInTheDocument();
 
-    // StundenTag (auf 3 Dezimalstellen)
+    // StundeTag (auf 3 Dezimalstellen)
     expect(screen.getByText('0.500')).toBeInTheDocument();
   });
 
@@ -250,27 +320,27 @@ describe('RaumbuchTable Component', () => {
   test('Sortiert numerische Werte korrekt', async () => {
     render(<RaumbuchTable data={mockData} summary={mockSummary} />);
 
-    // Klicke auf die Spaltenüberschrift "qm"
-    await userEvent.click(screen.getByText('qm'));
+    // Klicke auf die Spaltenüberschrift "Menge"
+    await userEvent.click(screen.getByText('Menge'));
 
     // Prüfe, ob die Sortierung angewendet wurde (aufsteigend)
     let rows = screen.getAllByRole('row');
     let firstRowCells = within(rows[1]).getAllByRole('cell');
     let lastRowCells = within(rows[3]).getAllByRole('cell');
 
-    // Der niedrigste qm-Wert sollte zuerst kommen
+    // Der niedrigste Menge-Wert sollte zuerst kommen
     expect(firstRowCells[6]).toHaveTextContent('20.00'); // 20 qm
     expect(lastRowCells[6]).toHaveTextContent('40.00'); // 40 qm
 
     // Klicke erneut auf die Spaltenüberschrift für absteigende Sortierung
-    await userEvent.click(screen.getByText('qm'));
+    await userEvent.click(screen.getByText('Menge'));
 
     // Prüfe, ob die Sortierung umgekehrt wurde (absteigend)
     rows = screen.getAllByRole('row');
     firstRowCells = within(rows[1]).getAllByRole('cell');
     lastRowCells = within(rows[3]).getAllByRole('cell');
 
-    // Der höchste qm-Wert sollte zuerst kommen
+    // Der höchste Menge-Wert sollte zuerst kommen
     expect(firstRowCells[6]).toHaveTextContent('40.00'); // 40 qm
     expect(lastRowCells[6]).toHaveTextContent('20.00'); // 20 qm
   });

@@ -24,18 +24,18 @@ const filterSchema = z.object({
   bereich: z.string().optional(),
   gebaeudeteil: z.string().optional(),
   etage: z.string().optional(),
-  rg: z.string().optional(),
+  reinigungsgruppe: z.string().optional(),
 });
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Validate standort ID
+    // Validate gebaeude ID
     const validatedParams = paramsSchema.safeParse({ id: params.id });
     if (!validatedParams.success) {
-      return NextResponse.json({ error: 'Invalid standort ID' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid gebaeude ID' }, { status: 400 });
     }
 
-    const standortId = Number(params.id);
+    const gebaeude_ID = Number(params.id); // Changed from objekt_ID
 
     // Parse query parameters for filtering
     const searchParams = request.nextUrl.searchParams;
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       bereich: searchParams.get('bereich') || undefined,
       gebaeudeteil: searchParams.get('gebaeudeteil') || undefined,
       etage: searchParams.get('etage') || undefined,
-      rg: searchParams.get('rg') || undefined,
+      reinigungsgruppe: searchParams.get('reinigungsgruppe') || undefined,
     };
 
     // Validate filter parameters
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Get raumbuch data
-    let raumbuchData = await getRaumbuchData(standortId);
+    let raumbuchData = await getRaumbuchData(gebaeude_ID);
 
     // Apply filters if provided
     const filters = validatedFilters.data;
@@ -70,8 +70,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       raumbuchData = raumbuchData.filter(item => item.Etage === filters.etage);
     }
 
-    if (filters.rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === filters.rg);
+    if (filters.reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(
+        item => item.Reinigungsgruppe === filters.reinigungsgruppe
+      );
     }
 
     // Calculate summary data
@@ -82,10 +84,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     // Create filter options for the frontend
     const filterOptions = {
-      bereiche: [...new Set(raumbuchData.map(item => item.Bereich))].sort(),
-      gebaeudeteil: [...new Set(raumbuchData.map(item => item.Gebaeudeteil))].sort(),
-      etage: [...new Set(raumbuchData.map(item => item.Etage))].sort(),
-      rg: [...new Set(raumbuchData.map(item => item.RG))].sort(),
+      bereiche: [...new Set(raumbuchData.map(item => item.Bereich))].filter(Boolean).sort(),
+      gebaeudeteil: [...new Set(raumbuchData.map(item => item.Gebaeudeteil))]
+        .filter(Boolean)
+        .sort(),
+      etage: [...new Set(raumbuchData.map(item => item.Etage))].filter(Boolean).sort(),
+      reinigungsgruppe: [...new Set(raumbuchData.map(item => item.Reinigungsgruppe))]
+        .filter(Boolean)
+        .sort(),
     };
 
     return NextResponse.json({

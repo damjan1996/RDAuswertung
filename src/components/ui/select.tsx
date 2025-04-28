@@ -1,6 +1,8 @@
 'use client';
 
-import React, { forwardRef, SelectHTMLAttributes } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
+import { forwardRef, type SelectHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -38,31 +40,40 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
 
     return (
-      <div className={cn('flex flex-col space-y-1', fullWidth && 'w-full', containerClassName)}>
+      <div className={cn('flex flex-col space-y-2', fullWidth && 'w-full', containerClassName)}>
         {label && (
-          <label
+          <motion.label
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
             htmlFor={selectId}
             className={cn(
-              'block text-sm font-medium text-gray-700',
-              required && 'after:content-["*"] after:ml-0.5 after:text-red-500',
+              'block text-sm font-medium text-primary-700',
+              required && "after:content-['*'] after:ml-0.5 after:text-accent",
               labelClassName
             )}
           >
             {label}
-          </label>
+          </motion.label>
         )}
 
-        <div className="relative">
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <select
             id={selectId}
             ref={ref}
             disabled={disabled}
             required={required}
             className={cn(
-              'block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
-              'disabled:opacity-60 disabled:bg-gray-100 disabled:cursor-not-allowed',
-              'appearance-none bg-none',
-              error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
+              'block w-full px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm',
+              'focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all duration-200',
+              'disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-not-allowed',
+              'appearance-none text-primary-800',
+              error && 'border-red-300 focus:ring-red-500/20 focus:border-red-500',
               fullWidth && 'w-full',
               className
             )}
@@ -76,38 +87,35 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
 
           {/* Custom dropdown arrow */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-            <svg
-              className="h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
-                clipRule="evenodd"
-              />
-            </svg>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-primary-400">
+            <ChevronDown className="h-4 w-4" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Error message */}
         {error && (
-          <p id={`${selectId}-error`} className={cn('text-sm text-red-600', errorClassName)}>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            id={`${selectId}-error`}
+            className={cn('text-sm text-red-500', errorClassName)}
+          >
             {error}
-          </p>
+          </motion.p>
         )}
 
         {/* Helper text - only show when there's no error */}
         {!error && helperText && (
-          <p
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
             id={`${selectId}-description`}
-            className={cn('text-sm text-gray-500', helperClassName)}
+            className={cn('text-sm text-primary-500/70', helperClassName)}
           >
             {helperText}
-          </p>
+          </motion.p>
         )}
       </div>
     );

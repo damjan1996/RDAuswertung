@@ -25,7 +25,7 @@ const querySchema = z.object({
   bereich: z.string().optional(),
   gebaeudeteil: z.string().optional(),
   etage: z.string().optional(),
-  rg: z.string().optional(),
+  reinigungsgruppe: z.string().optional(), // Geändert von rg zu reinigungsgruppe
 });
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       bereich: searchParams.get('bereich') || undefined,
       gebaeudeteil: searchParams.get('gebaeudeteil') || undefined,
       etage: searchParams.get('etage') || undefined,
-      rg: searchParams.get('rg') || undefined,
+      reinigungsgruppe: searchParams.get('reinigungsgruppe') || searchParams.get('rg') || undefined, // Unterstützung für beide Parameter
     };
 
     const validatedQuery = querySchema.safeParse(queryParams);
@@ -72,8 +72,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (filters.etage) {
       raumbuchData = raumbuchData.filter(item => item.Etage === filters.etage);
     }
-    if (filters.rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === filters.rg);
+    if (filters.reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(
+        item => item.Reinigungsgruppe === filters.reinigungsgruppe
+      );
     }
 
     // Calculate summary and prepare visualization data

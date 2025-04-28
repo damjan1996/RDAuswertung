@@ -7,16 +7,16 @@ import { getRaumbuchData } from '@/services/database/queries';
 
 // Query parameters schema for raumbuch filtering
 const querySchema = z.object({
-  standortId: z
+  gebaeude_ID: z // Changed from objekt_ID
     .string()
     .optional()
     .refine(val => !val || !isNaN(Number(val)), {
-      message: 'standortId must be a valid number',
+      message: 'gebaeude_ID must be a valid number',
     }),
   bereich: z.string().optional(),
   gebaeudeteil: z.string().optional(),
   etage: z.string().optional(),
-  rg: z.string().optional(),
+  reinigungsgruppe: z.string().optional(),
   limit: z
     .string()
     .optional()
@@ -36,11 +36,11 @@ export async function GET(request: NextRequest) {
     // Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;
     const queryParams = {
-      standortId: searchParams.get('standortId') || undefined,
+      gebaeude_ID: searchParams.get('gebaeude_ID') || undefined, // Changed from objekt_ID
       bereich: searchParams.get('bereich') || undefined,
       gebaeudeteil: searchParams.get('gebaeudeteil') || undefined,
       etage: searchParams.get('etage') || undefined,
-      rg: searchParams.get('rg') || undefined,
+      reinigungsgruppe: searchParams.get('reinigungsgruppe') || undefined,
       limit: searchParams.get('limit') || undefined,
       offset: searchParams.get('offset') || undefined,
     };
@@ -54,15 +54,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { standortId, bereich, gebaeudeteil, etage, rg, limit, offset } = validatedQuery.data;
+    const { gebaeude_ID, bereich, gebaeudeteil, etage, reinigungsgruppe, limit, offset } =
+      validatedQuery.data;
 
-    // If no standortId provided, return an error since we need at least a standort
-    if (!standortId) {
-      return NextResponse.json({ error: 'standortId is required' }, { status: 400 });
-    }
+    // If no gebaeude_ID provided, use default (-1)
+    const requestedGebaeudeId = gebaeude_ID ? Number(gebaeude_ID) : -1;
 
     // Get raumbuch data
-    let raumbuchData = await getRaumbuchData(Number(standortId));
+    let raumbuchData = await getRaumbuchData(requestedGebaeudeId);
 
     // Apply filters if provided
     if (bereich) {
@@ -77,8 +76,8 @@ export async function GET(request: NextRequest) {
       raumbuchData = raumbuchData.filter(item => item.Etage === etage);
     }
 
-    if (rg) {
-      raumbuchData = raumbuchData.filter(item => item.RG === rg);
+    if (reinigungsgruppe) {
+      raumbuchData = raumbuchData.filter(item => item.Reinigungsgruppe === reinigungsgruppe);
     }
 
     // Calculate total count before pagination

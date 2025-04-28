@@ -1,16 +1,31 @@
 'use client';
 
-import React, { ButtonHTMLAttributes, forwardRef } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import { forwardRef } from 'react';
 
 import { cn } from '@/lib/utils';
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+import type { HTMLMotionProps } from 'framer-motion';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+
+// Erstelle einen benutzerdefinierten Typ, der die Kollisionen zwischen HTML-Button und Framer Motion behandelt
+type ButtonBaseProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  keyof HTMLMotionProps<'button'>
+>;
+
+export interface ButtonProps extends ButtonBaseProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   isLoading?: boolean;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -32,12 +47,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // Variant styles
     const variantStyles = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-      secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500',
+      primary: 'bg-accent hover:bg-accent-600 text-white focus:ring-accent/30',
+      secondary: 'bg-primary-700 text-white hover:bg-primary-800 focus:ring-primary-500/30',
       outline:
-        'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500',
-      ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
-      link: 'bg-transparent text-primary-600 hover:underline focus:ring-primary-500 p-0',
+        'bg-transparent border border-primary-200 text-primary-700 hover:bg-primary-50 focus:ring-primary-500/20',
+      ghost: 'bg-transparent text-primary-700 hover:bg-primary-50 focus:ring-primary-500/20',
+      link: 'bg-transparent text-accent hover:text-accent-600 hover:underline focus:ring-accent/20 p-0',
     };
 
     // Size styles
@@ -50,14 +65,25 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // Only add padding to link variant when icons are present
     const linkPadding = variant === 'link' && (leftIcon || rightIcon) ? 'px-1' : '';
 
+    // Motion variants for hover and tap effects
+    const motionVariants = {
+      hover: variant === 'link' ? {} : { y: -2 },
+      tap: variant === 'link' ? {} : { scale: 0.98 },
+    };
+
+    // Filtere HTML-Button-spezifische Props
+    const buttonProps = { ...props } as any;
+
     return (
-      <button
+      <motion.button
         ref={ref}
         type={type}
         disabled={disabled || isLoading}
+        whileHover={!disabled && !isLoading ? motionVariants.hover : {}}
+        whileTap={!disabled && !isLoading ? motionVariants.tap : {}}
         className={cn(
-          'inline-flex items-center justify-center font-medium rounded-md',
-          'focus:outline-none focus:ring-2 focus:ring-offset-2',
+          'inline-flex items-center justify-center font-medium rounded-lg',
+          'focus:outline-none focus:ring-2 focus:ring-offset-1',
           'transition-colors duration-200 ease-in-out',
           variantStyles[variant],
           variant !== 'link' && sizeStyles[size],
@@ -66,35 +92,48 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           (disabled || isLoading) && 'opacity-60 cursor-not-allowed',
           className
         )}
-        {...props}
+        {...buttonProps}
       >
         {isLoading && (
-          <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="-ml-1 mr-2"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </motion.span>
         )}
 
-        {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
-        {children}
-        {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
-      </button>
+        {!isLoading && leftIcon && (
+          <motion.span
+            initial={{ opacity: 0, x: -5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mr-2"
+          >
+            {leftIcon}
+          </motion.span>
+        )}
+
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, delay: 0.1 }}
+        >
+          {children}
+        </motion.span>
+
+        {!isLoading && rightIcon && (
+          <motion.span
+            initial={{ opacity: 0, x: 5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="ml-2"
+          >
+            {rightIcon}
+          </motion.span>
+        )}
+      </motion.button>
     );
   }
 );

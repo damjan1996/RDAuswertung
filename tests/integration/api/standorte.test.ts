@@ -1,4 +1,5 @@
 import * as databaseQueries from '@/services/database/queries';
+import { Standort } from '@/types/standort.types';
 
 // Mock der Datenbank-Abfragen
 jest.mock('@/services/database/queries', () => ({
@@ -55,14 +56,6 @@ const mockZod = {
   default: () => mockZod,
 };
 
-// Interface für Standort
-interface Standort {
-  id: number;
-  bezeichnung: string;
-  preis: number;
-  preis7Tage: number;
-}
-
 // Mock für GET /api/standorte
 const mockGET = async (req: MockNextRequest) => {
   try {
@@ -78,7 +71,7 @@ const mockGET = async (req: MockNextRequest) => {
       : 0;
 
     // Rufe Standorte ab
-    let standorte = (await databaseQueries.getStandorte()) as Standort[];
+    let standorte = await databaseQueries.getStandorte();
 
     // Filterung nach Suchbegriff
     if (search) {
@@ -88,10 +81,14 @@ const mockGET = async (req: MockNextRequest) => {
     // Sortierung
     standorte.sort((a, b) => {
       const sortField = sort === 'id' ? 'id' : 'bezeichnung';
-      if (a[sortField as keyof Standort] < b[sortField as keyof Standort])
-        return order === 'asc' ? -1 : 1;
-      if (a[sortField as keyof Standort] > b[sortField as keyof Standort])
-        return order === 'asc' ? 1 : -1;
+
+      // Sichere Werte erhalten, die nicht null oder undefined sind
+      const aValue = a[sortField as keyof Standort] ?? '';
+      const bValue = b[sortField as keyof Standort] ?? '';
+
+      // Vergleich mit den sicheren Werten
+      if (aValue < bValue) return order === 'asc' ? -1 : 1;
+      if (aValue > bValue) return order === 'asc' ? 1 : -1;
       return 0;
     });
 
@@ -139,9 +136,33 @@ const mockGETById = async (req: MockNextRequest, { params }: { params: { id: str
 describe('Standorte API', () => {
   // Beispiel-Standorte für die Tests
   const mockStandorte: Standort[] = [
-    { id: 1, bezeichnung: 'Standort A', preis: 25.5, preis7Tage: 30 },
-    { id: 2, bezeichnung: 'Standort B', preis: 22.0, preis7Tage: 26 },
-    { id: 3, bezeichnung: 'Standort C', preis: 28.0, preis7Tage: 32 },
+    {
+      id: 1,
+      bezeichnung: 'Standort A',
+      adresse: 'Adresse 1',
+      strasse: 'Straße 1',
+      plz: '12345',
+      ort: 'Stadt A',
+      isActive: true,
+    },
+    {
+      id: 2,
+      bezeichnung: 'Standort B',
+      adresse: 'Adresse 2',
+      strasse: 'Straße 2',
+      plz: '23456',
+      ort: 'Stadt B',
+      isActive: true,
+    },
+    {
+      id: 3,
+      bezeichnung: 'Standort C',
+      adresse: 'Adresse 3',
+      strasse: 'Straße 3',
+      plz: '34567',
+      ort: 'Stadt C',
+      isActive: true,
+    },
   ];
 
   beforeEach(() => {

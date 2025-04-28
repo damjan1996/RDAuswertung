@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import Footer from '@/components/layout/footer';
 import Header from '@/components/layout/header';
 import Sidebar from '@/components/layout/sidebar';
+import { useSidebar } from '@/components/layout/sidebar-context';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -36,8 +37,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="flex flex-1">
+      <div className="flex flex-1 pt-16">
+        {' '}
+        {/* Padding-top für Header */}
         <Sidebar />
+        <div className="w-64 flex-shrink-0"></div> {/* Platzhalter für Sidebar */}
         <main className="flex-1 p-6 overflow-auto">
           <div className="container mx-auto">{children}</div>
         </main>
