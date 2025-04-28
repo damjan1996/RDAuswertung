@@ -139,7 +139,7 @@ model ReinigungsintervallTage {
 
   // Relationships
   reinigungsintervall Reinigungsintervall @relation(fields: [reinigungsintervall_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  raumbuch    Raumbuch[]
+  raumbuchRelation    Raumbuch[] @relation("RaumbuchToReinigungsintervallTage")
 
   @@unique([reinigungsintervall_ID, anzahl])
   @@map("BIRD.ReinigungsintervallTage")
@@ -201,6 +201,7 @@ model Raumbuch {
   einheitRel          Einheit?  @relation(fields: [einheit_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reinigungsintervallRel Reinigungsintervall? @relation(fields: [reinigungsintervall_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reinigungsTagRel    ReinigungsTage? @relation(fields: [reinigungsTage_ID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reinigungsintervallTage ReinigungsintervallTage[] @relation("RaumbuchToReinigungsintervallTage")
 
   @@map("BIRD.Raumbuch")
 }
