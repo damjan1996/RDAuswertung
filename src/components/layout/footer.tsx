@@ -5,15 +5,9 @@ import { ChevronUp, Home, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { useSidebar } from './sidebar-context';
-
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [scrolled, setScrolled] = useState(false);
-  const { isCollapsed, sidebarWidth } = useSidebar();
-
-  // Dynamisch den linken Rand basierend auf der Sidebar-Breite setzen
-  const marginLeftClass = isCollapsed ? 'ml-20' : 'ml-64';
 
   // Handle scroll effect for consistency with header
   useEffect(() => {
@@ -37,7 +31,7 @@ export default function Footer() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className={`py-8 mt-auto relative z-30 ${scrolled ? 'bg-primary-800/95 text-white' : 'bg-primary-800 text-white'} ${marginLeftClass} transition-all duration-300`}
+      className={`py-8 mt-auto relative z-30 ${scrolled ? 'bg-primary-800/95 text-white' : 'bg-primary-800 text-white'} transition-all duration-300`}
     >
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

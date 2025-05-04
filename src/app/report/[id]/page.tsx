@@ -3,25 +3,21 @@
 import { motion } from 'framer-motion';
 import {
   ArrowDownToLine,
-  BarChart3,
+  ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
   FileText,
   RefreshCw,
-  Table,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import BereichChart from '@/components/charts/bereich-chart';
-import RgChart from '@/components/charts/rg-chart';
 import StandortSelect from '@/components/forms/standort-select';
 import FilterBar from '@/components/raumbuch/filter-bar';
 import RaumbuchTable from '@/components/raumbuch/raumbuch-table';
-import SummaryGrid from '@/components/raumbuch/summary-grid';
 import Alert from '@/components/ui/alert';
 import Card from '@/components/ui/card';
 import Loader from '@/components/ui/loader';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFilter } from '@/hooks/use-filter';
 import { useRaumbuchData } from '@/hooks/use-raumbuch-data';
 import { useStandorte } from '@/hooks/use-standorte';
@@ -32,12 +28,14 @@ interface ReportPageProps {
   };
 }
 
+const ITEMS_PER_PAGE = 20;
+
 export default function ReportPage({ params }: ReportPageProps) {
   const standortId = Number.parseInt(params.id);
   const router = useRouter();
   const { standorte, isLoading: standorteLoading, error: standorteError } = useStandorte();
   const [selectedStandortId, setSelectedStandortId] = useState<number>(standortId);
-  const [activeTab, setActiveTab] = useState('tabelle');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Get filter state from hook
   const { filters, setFilter, resetFilters, filterQueryString } = useFilter();
@@ -46,11 +44,27 @@ export default function ReportPage({ params }: ReportPageProps) {
   const {
     data: raumbuchData,
     summary,
-    visualizationData,
     filterOptions,
     isLoading,
     error,
   } = useRaumbuchData(standortId, filterQueryString);
+
+  // Pagination logic
+  const { paginatedData, totalPages } = useMemo(() => {
+    if (!raumbuchData) return { paginatedData: [], totalPages: 0 };
+
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedData = raumbuchData.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(raumbuchData.length / ITEMS_PER_PAGE);
+
+    return { paginatedData, totalPages };
+  }, [raumbuchData, currentPage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterQueryString]);
 
   // Selected standort info
   const selectedStandort = standorte?.find(s => s.id === standortId);
@@ -71,6 +85,43 @@ export default function ReportPage({ params }: ReportPageProps) {
     const exportUrl = `/export/pdf/${standortId}${filterQueryString ? `?${filterQueryString}` : ''}`;
     window.open(exportUrl, '_blank');
   };
+
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate pagination range
+  const paginationRange = useMemo(() => {
+    const range = [];
+    const delta = 2; // Number of pages to show around current page
+    const left = Math.max(1, currentPage - delta);
+    const right = Math.min(totalPages, currentPage + delta);
+
+    // Always show first page
+    if (left > 1) {
+      range.push(1);
+      if (left > 2) {
+        range.push('...');
+      }
+    }
+
+    // Add the range
+    for (let i = left; i <= right; i++) {
+      range.push(i);
+    }
+
+    // Always show last page
+    if (right < totalPages) {
+      if (right < totalPages - 1) {
+        range.push('...');
+      }
+      range.push(totalPages);
+    }
+
+    return range;
+  }, [currentPage, totalPages]);
 
   // Animation variants
   const containerVariants = {
@@ -150,16 +201,6 @@ export default function ReportPage({ params }: ReportPageProps) {
       {/* Content when data is loaded */}
       {!isLoading && !error && raumbuchData && summary && (
         <>
-          {/* Summary Section */}
-          <motion.div variants={itemVariants} className="mb-4">
-            <Card
-              title={`Zusammenfassung für ${selectedStandort?.bezeichnung || `Standort ${standortId}`}`}
-              className="bg-white shadow-sm border border-gray-100"
-            >
-              <SummaryGrid summary={summary} />
-            </Card>
-          </motion.div>
-
           {/* Filter Bar */}
           <motion.div variants={itemVariants} className="mb-3">
             <FilterBar
@@ -170,7 +211,10 @@ export default function ReportPage({ params }: ReportPageProps) {
                   setFilter(key as any, value as string);
                 });
               }}
-              onReset={resetFilters}
+              onReset={() => {
+                resetFilters();
+                setCurrentPage(1);
+              }}
             />
           </motion.div>
 
@@ -208,36 +252,20 @@ export default function ReportPage({ params }: ReportPageProps) {
             </motion.div>
           </motion.div>
 
-          {/* Tabs for Table and Charts */}
+          {/* Data Table */}
           <motion.div variants={itemVariants}>
             <div className="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
               <div className="border-b border-gray-100">
                 <div className="flex justify-between items-center px-4 py-3">
-                  <h2 className="text-lg font-semibold text-primary-800">Raumbuch-Daten</h2>
+                  <h2 className="text-lg font-semibold text-primary-800">
+                    Raumbuch-Daten
+                    {raumbuchData.length > 0 && (
+                      <span className="ml-2 text-sm font-normal text-gray-500">
+                        ({raumbuchData.length} {raumbuchData.length === 1 ? 'Eintrag' : 'Einträge'})
+                      </span>
+                    )}
+                  </h2>
                   <div className="flex items-center space-x-2">
-                    <Tabs
-                      defaultValue="tabelle"
-                      value={activeTab}
-                      onValueChange={setActiveTab}
-                      className="w-48"
-                    >
-                      <TabsList className="grid grid-cols-2">
-                        <TabsTrigger
-                          value="tabelle"
-                          className="data-[state=active]:bg-primary-50 data-[state=active]:text-primary"
-                        >
-                          <Table className="h-4 w-4 mr-1" />
-                          <span>Tabelle</span>
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="diagramme"
-                          className="data-[state=active]:bg-primary-50 data-[state=active]:text-primary"
-                        >
-                          <BarChart3 className="h-4 w-4 mr-1" />
-                          <span>Diagramme</span>
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
                     <button
                       type="button"
                       onClick={handleExcelExport}
@@ -250,26 +278,82 @@ export default function ReportPage({ params }: ReportPageProps) {
                 </div>
               </div>
 
-              {activeTab === 'tabelle' ? (
-                <div className="p-4">
-                  <RaumbuchTable data={raumbuchData} summary={summary} />
-                </div>
-              ) : (
-                <div className="p-4 space-y-6">
-                  <div className="bg-white rounded-lg p-4 border border-gray-100">
-                    <h3 className="text-base font-medium text-primary-800 mb-3">
-                      Quadratmeter nach Bereich
-                    </h3>
-                    {visualizationData?.bereichData && (
-                      <BereichChart data={visualizationData.bereichData} />
-                    )}
-                  </div>
+              <div className="p-4">
+                <RaumbuchTable data={paginatedData} summary={summary} />
+              </div>
 
-                  <div className="bg-white rounded-lg p-4 border border-gray-100">
-                    <h3 className="text-base font-medium text-primary-800 mb-3">
-                      Wert pro Monat nach Reinigungsgruppe
-                    </h3>
-                    {visualizationData?.rgData && <RgChart data={visualizationData.rgData} />}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="border-t border-gray-100 px-4 py-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <div className="text-sm text-gray-500">
+                      Zeige{' '}
+                      <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span>{' '}
+                      bis{' '}
+                      <span className="font-medium">
+                        {Math.min(currentPage * ITEMS_PER_PAGE, raumbuchData.length)}
+                      </span>{' '}
+                      von <span className="font-medium">{raumbuchData.length}</span> Einträgen
+                    </div>
+
+                    <nav
+                      className="relative z-0 inline-flex rounded-md shadow-sm"
+                      aria-label="Pagination"
+                    >
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`relative inline-flex items-center px-3 py-2 text-sm rounded-l-md border ${
+                          currentPage === 1
+                            ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="ml-1 hidden sm:inline">Zurück</span>
+                      </button>
+
+                      {paginationRange.map((number, index) => {
+                        if (number === '...') {
+                          return (
+                            <span
+                              key={`ellipsis-${index}`}
+                              className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm text-gray-700"
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+
+                        const isActive = currentPage === number;
+                        return (
+                          <button
+                            key={number}
+                            onClick={() => handlePageChange(number as number)}
+                            className={`relative inline-flex items-center px-4 py-2 text-sm border ${
+                              isActive
+                                ? 'z-10 bg-accent border-accent text-white'
+                                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            {number}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`relative inline-flex items-center px-3 py-2 text-sm rounded-r-md border ${
+                          currentPage === totalPages
+                            ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="mr-1 hidden sm:inline">Weiter</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </nav>
                   </div>
                 </div>
               )}

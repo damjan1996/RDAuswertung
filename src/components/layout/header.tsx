@@ -41,18 +41,11 @@ export default function Header() {
 
   return (
     <>
-      {/* Spacer div to push content below the fixed header */}
-      <div className="h-16"></div>
-
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-background/95 text-primary shadow-lg backdrop-blur-md'
-            : 'bg-primary text-primary-50'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-primary text-primary-50 ${scrolled ? 'shadow-lg' : ''}`}
       >
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
@@ -68,14 +61,12 @@ export default function Header() {
                   transition={{ type: 'spring', stiffness: 300 }}
                   className="mr-2"
                 >
-                  <Home
-                    className={`h-6 w-6 ${scrolled ? 'text-secondary' : 'text-primary-200'} group-hover:text-accent transition-colors`}
-                  />
+                  <Home className="h-6 w-6 text-primary-200 group-hover:text-accent transition-colors" />
                 </motion.div>
                 <span className="hidden sm:inline relative overflow-hidden">
                   <span className="inline-block">Ritter Digital</span>
                   <motion.span
-                    className={`absolute bottom-0 left-0 h-[2px] ${scrolled ? 'bg-accent' : 'bg-accent'}`}
+                    className="absolute bottom-0 left-0 h-[2px] bg-accent"
                     initial={{ width: 0 }}
                     whileHover={{ width: '100%' }}
                     transition={{ duration: 0.3 }}
@@ -96,19 +87,13 @@ export default function Header() {
                   <Link
                     href={item.href}
                     className={`relative px-2 py-1 font-medium transition-colors ${
-                      pathname === item.href
-                        ? scrolled
-                          ? 'text-accent'
-                          : 'text-accent'
-                        : scrolled
-                          ? 'text-primary-800'
-                          : 'text-primary-100'
+                      pathname === item.href ? 'text-accent' : 'text-primary-100'
                     }`}
                   >
                     {item.label}
                     {pathname === item.href && (
                       <motion.span
-                        className={`absolute bottom-0 left-0 h-[2px] w-full ${scrolled ? 'bg-accent' : 'bg-accent'}`}
+                        className="absolute bottom-0 left-0 h-[2px] w-full bg-accent"
                         layoutId="underline"
                       />
                     )}
@@ -121,7 +106,7 @@ export default function Header() {
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className={`text-sm ${scrolled ? 'text-secondary/80' : 'text-primary-200'}`}
+                    className="text-sm text-primary-200"
                   >
                     Angemeldet als: {user || 'Benutzer'}
                   </motion.span>
@@ -129,11 +114,7 @@ export default function Header() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleLogout}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      scrolled
-                        ? 'bg-accent text-white hover:bg-accent-600 hover:shadow-md'
-                        : 'bg-accent text-white hover:bg-accent-400'
-                    }`}
+                    className="px-4 py-2 rounded-full text-sm font-medium transition-all bg-accent text-white hover:bg-accent-400"
                   >
                     Abmelden
                   </motion.button>
@@ -144,11 +125,7 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className={`md:hidden p-2 rounded-full ${
-                scrolled
-                  ? 'text-primary hover:bg-primary-100'
-                  : 'text-primary-50 hover:bg-primary-700'
-              } transition-colors focus:outline-none`}
+              className="md:hidden p-2 rounded-full text-primary-50 hover:bg-primary-700 transition-colors focus:outline-none"
               onClick={toggleMobileMenu}
               aria-expanded={isMobileMenuOpen}
             >
@@ -166,11 +143,7 @@ export default function Header() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className={`md:hidden ${
-                scrolled
-                  ? 'bg-background border-t border-primary-100'
-                  : 'bg-primary-700/95 backdrop-blur-md border-t border-primary-600/30'
-              }`}
+              className="md:hidden bg-primary-700/95 backdrop-blur-md border-t border-primary-600/30"
             >
               <div className="container mx-auto px-6 py-4">
                 <nav className="flex flex-col space-y-3">
@@ -185,12 +158,8 @@ export default function Header() {
                         href={item.href}
                         className={`block py-3 px-4 rounded-lg transition-all ${
                           pathname === item.href
-                            ? scrolled
-                              ? 'bg-primary-100 text-accent font-medium'
-                              : 'bg-primary-600 text-accent font-medium'
-                            : scrolled
-                              ? 'text-primary-800 hover:bg-primary-100'
-                              : 'text-primary-50 hover:bg-primary-600/50'
+                            ? 'bg-primary-600 text-accent font-medium'
+                            : 'text-primary-50 hover:bg-primary-600/50'
                         }`}
                         onClick={closeMobileMenu}
                       >
@@ -205,7 +174,7 @@ export default function Header() {
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ duration: 0.2, delay: 0.1 }}
-                        className={`py-3 px-4 text-sm ${scrolled ? 'text-secondary/80' : 'text-primary-200'}`}
+                        className="py-3 px-4 text-sm text-primary-200"
                       >
                         Angemeldet als: {user || 'Benutzer'}
                       </motion.div>
@@ -217,11 +186,7 @@ export default function Header() {
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           onClick={handleLogout}
-                          className={`w-full py-3 px-4 rounded-lg text-left transition-all ${
-                            scrolled
-                              ? 'bg-accent text-white hover:bg-accent-600'
-                              : 'bg-accent text-white hover:bg-accent-400'
-                          }`}
+                          className="w-full py-3 px-4 rounded-lg text-left transition-all bg-accent text-white hover:bg-accent-400"
                         >
                           Abmelden
                         </motion.button>
